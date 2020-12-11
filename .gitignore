@@ -49,3 +49,5 @@ test/**/*.png
 build/
 dist/
 *.egg-info/
+*/*.so
+*/*.c
