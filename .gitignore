@@ -1,0 +1,51 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.app
+
+# vim temp files
+*.swp
+
+# temp/local directories
+bck*
+tmp*
+bin/*
+build*
+scrap*
+
+# GPTL log files
+gptl*.log*
+
+# Ignore image files in test directory
+test/**/*.png
+
+build/
+dist/
+*.egg-info/
