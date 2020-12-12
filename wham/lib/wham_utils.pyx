@@ -17,9 +17,8 @@ def read_dat(file_path):
 
     N = lines[:,1]
     Ntilde = lines[:,2]
-    U = lines[:,3]
 
-    return (N,Ntilde,U)
+    return (N,Ntilde)
 
 
 def weighted_hist_Uwham(xji,wji,min_,max_,bins=100):
