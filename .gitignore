@@ -51,3 +51,5 @@ dist/
 *.egg-info/
 */*.so
 */*.c
+wham/lib/*.c
+wham/lib/*.so
