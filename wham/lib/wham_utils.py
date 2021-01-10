@@ -131,3 +131,25 @@ def Uwham_preprocess(xji,Ntwiddle,k,beta=0.4036,unbiased=True):
         uji[i] = 0.5*beta*k*(xji-Ntwiddle[i])**2
 
     return uji,fi0
+
+def make_bins(data,min_,max_,bins=101):
+    """
+    A function that bins some data within min_ and max_
+
+    data: the data that you want to bin pass in numpy array (shape(N,))
+    min_: minimum of the bins
+    max_: maximum of the bins
+    bins: number of bins to make
+    
+    returns:
+        tuple of (bins,binned_vec)
+    """
+    bin_ = np.linspace(min_,max_,bins)
+
+    # right = False implies bins[i-1]<=x<bins[i]
+    digitized = np.digitize(data,bin_,right=False)
+
+    binned_vec = [(digitized == i).sum() for i in range(1,bins)]
+
+
+    return (bin_[:-1],binned_vec)
