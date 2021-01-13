@@ -149,7 +149,7 @@ def make_bins(data,min_,max_,bins=101):
     # right = False implies bins[i-1]<=x<bins[i]
     digitized = np.digitize(data,bin_,right=False)
 
-    binned_vec = [(digitized == i).sum() for i in range(1,bins)]
+    binned_vec = np.array([(digitized == i).sum() for i in range(1,bins)])
 
 
     return (bin_[:-1],binned_vec)

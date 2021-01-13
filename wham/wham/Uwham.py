@@ -62,6 +62,7 @@ def Uwham_NLL_eq(fi,uji,Ni):
     """
     S = uji.shape[0]
     Ntot = uji.shape[1]
+    fi = fi - fi[-1]
 
     first_term = nup.sum(autograd_logsumexp(nup.repeat(fi[:,nup.newaxis],Ntot,axis=1)-uji,\
                                                 b=np.repeat(Ni[:,np.newaxis]/Ntot,Ntot,axis=1),axis=0))/Ntot

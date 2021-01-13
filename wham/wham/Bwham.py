@@ -83,9 +83,9 @@ def Bwham_NLL_eq(x,Ni,Ml,Wil):
 
     return first_term - second_term
 
-def Bwham_NLL(gi0,Ni,Ml,Wil):
+def Bwham_NLL(fi0,Ni,Ml,Wil,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000):
     """
-    gi0: the initial guess of the gi's where gi=ln(fi)
+    fi0: the initial guess of the gi's where gi=ln(fi)
 
     Ni: Number of data counts in simulation i (S,)
 
@@ -94,13 +94,13 @@ def Bwham_NLL(gi0,Ni,Ml,Wil):
     Wil: 0.5*k*beta*(n-nstar)**2 (S,M)
 
     returns:
-        gi: where gi = ln(fi) (S,)
+        fi: where fi = -ln(Zi/Z0) (S,)
 
         Fl: where Fl = -log(pl) (M,)
 
         pl: shape (M,)
     """
-    result = minimize(value_and_grad(Bwham_NLL_eq),gi0,args=(Ni,Ml,Wil),jac=True,method='L-BFGS-B') 
+    result = minimize(value_and_grad(Bwham_NLL_eq),fi0,args=(Ni,Ml,Wil),jac=True,method='L-BFGS-B',options={'ftol':ftol,'gtol':gtol,'maxiter':maxiter,'maxfun':maxfun,'iprint':10}) 
     
     gi = result.x
     gi = gi - gi[-1]
