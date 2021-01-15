@@ -83,7 +83,7 @@ def Bwham_NLL_eq(x,Ni,Ml,Wil):
 
     return first_term - second_term
 
-def Bwham_NLL(fi0,Ni,Ml,Wil,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000):
+def Bwham_NLL(fi0,Ni,Ml,Wil,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,iprint=-1):
     """
     fi0: the initial guess of the gi's where gi=ln(fi)
 
@@ -100,7 +100,7 @@ def Bwham_NLL(fi0,Ni,Ml,Wil,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000)
 
         pl: shape (M,)
     """
-    result = minimize(value_and_grad(Bwham_NLL_eq),fi0,args=(Ni,Ml,Wil),jac=True,method='L-BFGS-B',options={'ftol':ftol,'gtol':gtol,'maxiter':maxiter,'maxfun':maxfun,'iprint':10}) 
+    result = minimize(value_and_grad(Bwham_NLL_eq),fi0,args=(Ni,Ml,Wil),jac=True,method='L-BFGS-B',options={'ftol':ftol,'gtol':gtol,'maxiter':maxiter,'maxfun':maxfun,'iprint':iprint}) 
     
     gi = result.x
     gi = gi - gi[-1]
