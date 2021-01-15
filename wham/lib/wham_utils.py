@@ -38,6 +38,7 @@ def weighted_hist_Uwham(xji,wji,min_,max_,bins=100):
     """
     Ntot = xji.shape[0]
     bins_vec = np.linspace(min_,max_,bins)
+    sum_ = wji.sum()
 
     # The weighted probability for each bin
     p = np.zeros((bins-1,))
@@ -47,8 +48,7 @@ def weighted_hist_Uwham(xji,wji,min_,max_,bins=100):
         maxi = bins_vec[i+1]
         idx_ = np.argwhere((xji>=mini) & (xji<maxi))
         for index in idx_:
-            p[i] += wji[index]
-
+            p[i] += wji[index]/sum_
 
     return (bins_vec[:-1],p)
 
