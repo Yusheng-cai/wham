@@ -153,3 +153,47 @@ def make_bins(data,min_,max_,bins=101):
 
 
     return (bin_[:-1],binned_vec)
+
+def cov_fi(wji,Ni):
+    """
+    This is a function that calculates the covariance matrix of fi where
+    fi = -ln(Qi/Q0).
+
+    wji: the weight matrices of different simulations (N,k) where N=number of observations 
+    in total, k=number of simulations
+
+    Ni: the number of observations in each simulation
+
+    returns 
+        covariance of fi in shape (k,k)
+    """
+    # obtain shape information
+    N,k = wji.shape
+
+    # create a diagonal matrix of Ni
+    N = np.diag(Ni)
+    
+    # define identity matrix 
+    I = np.eye(k)
+
+    # Perform SVD on wji matrix
+    U, s , Vt = np.linalg.svd(wji,full_matrices=False)
+    s = np.diag(s)
+
+
+    # Inner part of covariance
+    inner = I - s.dot(Vt).dot(N).dot(Vt.T).dot(s)
+    pseudo_inverse = np.linalg.pinv(inner)
+
+    # find covariance of ln(Qi)
+    theta = (Vt.T).dot(s).dot(pseudo_inverse).dot(s).dot(Vt)
+
+    # Using the above to find the covariance of -ln(Qi/Q0) where Q0 is at the 
+    # end of the array Cov_i = Theta_{-1,-1} - 2*Theta_{-1,i} + Theta_{i,i}
+    
+    cov = np.zeros((k,))
+    for i in range(k):
+        cov[i] = theta[-1,-1] - 2*theta[-1,i] + theta[i,i]
+
+
+    return cov
