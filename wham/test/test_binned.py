@@ -1,15 +1,18 @@
-from wham.wham.Bwham import *
+import sys
+sys.path.insert(0,"../wham")
+from Bwham import Bwham
 from wham.lib.wham_utils import *
-from wham.wham.Uwham import *
+import matplotlib.pyplot as plt
 import os
 import numpy as np
 
 
 def gather_data():
     nlist = ["-5.0","0.0","5.0","10.0","15.0","20.0","25.0","unbiased"]
-    nnlist = [-5,0,5,10,15,20,25]
+    Ntwiddle = [-5,0,5,10,15,20,25]
     data_list = []
     beta = 1000/(8.314*300)
+    k = 0.98
 
     for n in nlist:
         if n != "unbiased":
@@ -19,13 +22,10 @@ def gather_data():
             N,Ntilde = read_dat(os.getcwd()+"/data/{}/time_samples.out".format(n))
             data_list.append(Ntilde)
 
-    data = np.concatenate(data_list)
-
-    Ml,Wil,fi0_b,bbins = Bwham_preprocess(data,nnlist,0,35,0.98,beta=beta,nbins=36,unbiased=True)
     Ni = np.ones((len(nlist),))*1500
+    xji = np.concatenate(data_list)
     
-
-    return Ml,Wil,fi0_b,Ni,data
+    return xji,beta,Ni,Ntwiddle,k
 
 def correct_data():
     f = open("data/F_Ntilde_WHAM.out")
@@ -37,19 +37,44 @@ def correct_data():
     return lines
 
 def test_binned():
-    Ml,Wil,fi0_b,Ni,data = gather_data()
+    xji,beta,Ni,Ntwiddle,k = gather_data()
+    min_ = 0
+    max_ = 35
+    nbins = 36
     correct = correct_data()
+    
+    b = Bwham(xji,Ni,Ntwiddle,k,min_,max_,bins=nbins,beta=beta,unbiased=True)
+    _,F,_ = b.self_consistent()
+    print(np.linalg.norm(F - correct,2)/len(F)) 
 
-    _,F_b,_ = Bwham(fi0_b,Ni,Ml,Wil)
-    F_b = F_b - F_b.min()
-
-    assert np.linalg.norm(F_b - correct,2)/len(F_b) < 0.01 
+    assert np.linalg.norm(F - correct,2)/len(F) < 0.01 
+    return np.linspace(min_,max_,nbins)[:-1],F
 
 def test_binned_nll():
-    Ml,Wil,fi0_b,Ni,data = gather_data()
+    xji,beta,Ni,Ntwiddle,k = gather_data()
+    min_ = 0
+    max_ = 35
+    nbins = 36
     correct = correct_data()
+    
+    b = Bwham(xji,Ni,Ntwiddle,k,min_,max_,bins=nbins,beta=beta,unbiased=True)
+    _,F,_ = b.Maximum_likelihood()
+    
+    print(np.linalg.norm(F - correct,2)/len(F))
+    assert np.linalg.norm(F - correct,2)/len(F) < 0.01  
+    return np.linspace(min_,max_,nbins)[:-1],F
 
-    _, F_b_nll, _ = Bwham_NLL(fi0_b,Ni,Ml,Wil)
-    F_b_nll = F_b_nll - F_b_nll.min()
+if __name__ == "__main__":
+    bbins,F = test_binned()
+    bbins_NLL,F_NLL = test_binned_nll()
+    correct = correct_data() 
 
-    assert np.linalg.norm(F_b_nll - correct,2)/len(F_b_nll) < 0.01 
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(bbins,F,label="Self consistent solution")
+    ax.plot(bbins_NLL,F_NLL,label='Maximum likelihood solution')
+    ax.plot(bbins,correct,label='Sean reference')
+    ax.legend(fontsize=15)
+    ax.set_xlabel(r"$\tilde{N}$")
+    ax.set_ylabel(r"$\beta F$")
+    plt.savefig("Binnedtest")

@@ -1,15 +1,19 @@
-from wham.wham.Bwham import *
-from wham.lib.wham_utils import *
-from wham.wham.Uwham import *
-import os
+import sys
+sys.path.insert(0,'../wham')
+from Uwham import Uwham
+from Bwham import *
 import numpy as np
+from wham.lib.wham_utils import *
+import matplotlib.pyplot as plt
+import os
 
 
 def gather_data():
     nlist = ["-5.0","0.0","5.0","10.0","15.0","20.0","25.0","unbiased"]
-    nnlist = [-5,0,5,10,15,20,25]
+    Ntwiddle = [-5,0,5,10,15,20,25]
     data_list = []
     beta = 1000/(8.314*300)
+    k = 0.98
 
     for n in nlist:
         if n != "unbiased":
@@ -19,13 +23,10 @@ def gather_data():
             N,Ntilde = read_dat(os.getcwd()+"/data/{}/time_samples.out".format(n))
             data_list.append(Ntilde)
 
-    data = np.concatenate(data_list)
-
-    uji,fi0_u = Uwham_preprocess(data,nnlist,0.98,beta=beta)
     Ni = np.ones((len(nlist),))*1500
-
-
-    return uji,fi0_u,Ni,data
+    xji = np.concatenate(data_list)
+    
+    return xji,Ni,Ntwiddle,beta,k
 
 def correct_data():
     f = open("data/F_Ntilde_WHAM.out")
@@ -37,23 +38,42 @@ def correct_data():
     return lines
 
 def test_u_nll():
-    uji,fi0_u,Ni,data = gather_data()
+    xji,Ni,Ntwiddle,beta,k = gather_data()
     correct = correct_data()
+    
+    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta,unbiased=True)
+    u.Maximum_likelihood()
+    ubins,_,F = u.compute_betaF_profile(0,35,bins=36)
+    print("MLE error:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
 
-    wji_u_nll, fi_u_nll = Uwham_NLL(fi0_u,uji,Ni)
-    _, pl_u_nll = weighted_hist_Uwham(data,wji_u_nll,0,35,bins=36)
-    F_u_nll = -np.log(pl_u_nll)
-
-    F_u_nll = F_u_nll - F_u_nll.min()
-    assert np.linalg.norm(F_u_nll - correct,2)/len(F_u_nll) < 0.05 
+    assert np.linalg.norm(F - correct,2)/len(F) < 0.02 
+    return ubins,F
 
 def test_u():
-    uji,fi0_u,Ni,data = gather_data()
+    xji,Ni,Ntwiddle,beta,k = gather_data()
     correct = correct_data()
+    
+    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta,unbiased=True)
+    u.self_consistent()
+    ubins,_,F = u.compute_betaF_profile(0,35,bins=36)
+    print("self consistent error:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
 
-    wji_u, fi_u = Uwham(fi0_u,uji,Ni)
-    _, pl_u = weighted_hist_Uwham(data,wji_u,0,35,bins=36)
-    F_u = -np.log(pl_u)
+    assert np.linalg.norm(F - correct,2)/len(F) < 0.02  
 
-    F_u = F_u - F_u.min()
-    assert np.linalg.norm(F_u - correct,2)/len(F_u) < 0.05 
+    return ubins,F
+
+if __name__ == '__main__':
+    ubins_nll,F_nll = test_u_nll()
+    ubins,F = test_u()
+    correct = correct_data()
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(ubins_nll,F_nll,'r',label="Negative likelihood")
+    ax.plot(ubins,correct,label='Sean reference')
+    ax.plot(ubins,F,'b--',label='Self iterative result')
+    ax.set_xlabel(r"$\tilde{N}$")
+    ax.set_ylabel(r"$\beta F$")
+    ax.legend(fontsize=15)
+
+    plt.savefig("Unbinnedtest.png")
