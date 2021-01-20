@@ -28,6 +28,9 @@ class Bwham:
         self.beta = beta
         self.k = k
         self.Ml,self.Wil,self.fi0,self.bins = self.initialize(unbiased=unbiased)
+
+        self.fi = None
+        self.pl = None
         
     def initialize(self,unbiased=True):
         """
@@ -147,6 +150,10 @@ class Bwham:
             F = -log_pl
             F = F - F.min()
             pl = np.exp(log_pl)
+
+            self.fi = fi
+            self.pl = pl
+
             return fi,F,pl
         else:
             return None
@@ -181,12 +188,39 @@ class Bwham:
             F = -log_pl
             F = F - F.min()
             pl = np.exp(log_pl)
+            self.fi = fi
+            self.pl = pl
 
             return fi, F, pl
         else:
             print("Optimization has not converged")
             return None
 
+    def get_pil(self):
+        """
+        Function that obtains the matrix of pil which is defined as 
+            pil = exp(fi)*exp(-Wil)*pl
+        inputs:
+            fi: -log(Zi/Z0) (S,)
+            Wil: energy matrix beta*0.5*k*(x-xstar)**2 (S,M)
+            pl: the probability of each bin (M,)
+
+        outputs:
+            pil: pil matrix with shape (S,M)
+        """
+        if self.fi is None:
+            raise RuntimeError("Please run self consistent or Maximum_likelihood first!")
+
+        fi = self.fi
+        pl = self.pl
+        Wil = self.Wil
+
+        M = Wil.shape[1]
+        S = Wil.shape[0]
+
+        pil = np.exp(np.repeat(fi[:,np.newaxis],M,axis=1))*np.exp(-Wil)*np.repeat(pl[np.newaxis,:],S,axis=0)
+
+        return pil
 
 def Bwham_NLL_eq(x,Ni,Ml,Wil):
     """
