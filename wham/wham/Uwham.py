@@ -121,7 +121,7 @@ class Uwham:
         else:
             return None
  
-    def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1,verbose=False):
+    def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1):
         """
         fi0: initial guess for Uwham
         uji: a matrix that holds all the energy for all the observations (beta*Wji) (shape(S,Ntot))
@@ -142,24 +142,22 @@ class Uwham:
 
         Ntot = uji.shape[1]
 
-        if verbose:
-            result = minimize(value_and_grad(Uwham_NLL_eq),fi0,args=(uji,Ni),\
-                    jac=True,method='L-BFGS-B',options={'disp':disp,'ftol':ftol,'gtol':gtol,'maxiter':maxiter,'maxfun':maxfun,'iprint':iprint},callback=self.callback)
-        else:
-            result = minimize(value_and_grad(Uwham_NLL_eq),fi0,args=(uji,Ni),\
+        result = minimize(value_and_grad(Uwham_NLL_eq),fi0,args=(uji,Ni),\
                     jac=True,method='L-BFGS-B',options={'disp':disp,'ftol':ftol,'gtol':gtol,'maxiter':maxiter,'maxfun':maxfun,'iprint':iprint})
 
         if result.success == True:
             print("Optimization has converged")
+
             fi = result.x # shape (S,)
             fi = fi - fi[-1]
 
             lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-uji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0) #shape (Ntot,)
+            wji = np.exp(lnwji)
 
-            self.wji = np.exp(lnwji)
+            self.wji = wji
             self.fi = fi
 
-            return np.exp(lnwji),fi
+            return wji,fi
         else:
             print("Optimization has not converged")
 
@@ -179,34 +177,64 @@ class Uwham:
         returns:
             bins_vec: binned vector from min_ to max_ (bins-1,)
             p: the probability in each bin
-            F: The free energy in the binned vectors from min_ to max_ (bins-1,)
+            F: The free energy in the binned vectors from min_ to max_ for all the simulations performed(S,bins-1)
         """
         xji = self.xji
         if self.wji is None:
             raise RuntimeError("Please run Maximum_likelihood or self_consistent first to obtain weights wji")
-        else:
-            wji = self.wji
+
+        S = self.uji.shape[0]
 
         bins_vec = np.linspace(min_,max_,bins)
-        sum_ = wji.sum()
+        pji = self.get_pji()
+        sum_ = pji.sum(axis=1)
 
         # The weighted probability for each bin
-        p = np.zeros((bins-1,))
+        p = np.zeros((S,bins-1))
+        F = np.zeros_like(p)
 
-        for i in range(bins-1):
-            mini = bins_vec[i]
-            maxi = bins_vec[i+1]
-            idx_ = np.argwhere((xji>=mini) & (xji<maxi))
-            for index in idx_:
-                p[i] += wji[index]/sum_
-        F = -np.log(p)
-        F = F-F.min()
+        # This will be a vector such as np.array([1,2,3,2,..]) indicating which bin each element falls into
+        digitized = np.digitize(xji,bins_vec)
+        indices = [np.argwhere(digitized == j) for j in range(1,bins)]
 
-        return (bins_vec[:-1],p,F)
+        for i in range(S):
+            pi = np.array([np.sum(pji[i][idx])/sum_[i] for idx in indices]) 
+            p[i] = pi 
 
-    def callback(fi):
-        print(fi)
+            Fi = -np.log(pi)
+            Fi = Fi - Fi.min()
+            F[i] = Fi
+        
+        return (bins_vec[:-1],F,p)
 
+    def get_pji(self):
+        """
+        Function that obtains all the weights for unbiased as well as biased simulations following the equation
+            pji_k = np.exp(fi)*np.exp(-Uji_k)*wji
+        where wji is the unbiased weights 
+
+        input:
+            fi: -Log(Zi/Z0) (S,)
+            Uji: energy matrix=0.5*beta*k*(x-xji)**2 (S,Ntot)
+            wji: weight matrix(Ntot,)
+
+        returns:
+            pji: shape (S,Ntot)
+        """
+        if self.fi is None and self.wji is None:
+            raise RuntimeError("Please run either self_consistent or Maximum_likelihood first")
+        
+        uji = self.uji
+        fi = self.fi
+        wji = self.wji
+        
+        S = uji.shape[0]
+        Ntot = uji.shape[1]
+
+        pji = np.exp(np.repeat(fi[:,np.newaxis],Ntot,axis=1))*np.exp(-uji)*np.repeat(wji[np.newaxis,:],S,axis=0)
+
+        return pji
+    
 def Uwham_NLL_eq(fi,uji,Ni):
     """
     fi: initial guess of the log of the partition coefficients Zk normalized by Z0 e.g. f1 = -ln(Z1/Z0) (shape (S,)) 
