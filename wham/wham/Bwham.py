@@ -8,6 +8,17 @@ from wham.lib.numeric import autograd_logsumexp
 
 class Bwham:
     def __init__(self,xji,Ni,Ntwiddle,k,min_,max_,bins=101,beta=0.4036,unbiased=True):
+        """
+        xji: all the observation in dataset (Ntot,)
+        Ni: The number of observations in each simulation (S,)
+        Ntwiddle: The Ntwiddle for all the biased simulations (S-1,)
+        k: The parameter for the harmonic potential where U=0.5*k(x-xstar)**2
+        min_: the minimum of the bins
+        max_: the maximum of the bins
+        bins: number of bins
+        beta: beta=1/kbT where the default value is at T=298K
+        """
+
         self.xji = xji
         self.Ni = Ni
         self.Ntwiddle = Ntwiddle
@@ -135,7 +146,8 @@ class Bwham:
         if converged == True:
             F = -log_pl
             F = F - F.min()
-            return fi,F,np.exp(log_pl)
+            pl = np.exp(log_pl)
+            return fi,F,pl
         else:
             return None
 

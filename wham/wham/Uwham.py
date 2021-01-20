@@ -132,6 +132,7 @@ class Uwham:
         returns:
             if converged:
                 the optimal wji for each observation
+                fi = -ln(Zi/Z0)
             else:
                 returns None
         """
@@ -177,6 +178,7 @@ class Uwham:
 
         returns:
             bins_vec: binned vector from min_ to max_ (bins-1,)
+            p: the probability in each bin
             F: The free energy in the binned vectors from min_ to max_ (bins-1,)
         """
         xji = self.xji
