@@ -4,9 +4,10 @@ def read_dat(file_path):
     """
     Function that reads the .dat from INDUS simulations
 
-    file_path: the path to the file 
+    Args:
+        file_path(str): the path to the file 
 
-    outputs:
+    Return:
         an numpy array that contains the N and Ntilde from the INDUS simulation (N, Ntilde) -> where both are of shape (nobs,)
     """
     f = open(file_path)
@@ -20,19 +21,20 @@ def read_dat(file_path):
 
     return (N,Ntilde)
 
-def make_bins(data,min_,max_,bins=101):
+def make_bins(data,min,max,bins=101):
     """
-    A function that bins some data within min_ and max_
-
-    data: the data that you want to bin pass in numpy array (shape(N,))
-    min_: minimum of the bins
-    max_: maximum of the bins
-    bins: number of bins to make
+    A function that bins some data within min and max
+    
+    Args:
+        data(np.ndarray): the data that you want to bin, pass in numpy array (shape(N,))
+        min(float): minimum of the bins
+        max(float): maximum of the bins
+        bins(int): number of bins to make
     
     returns:
         tuple of (bins,binned_vec)
     """
-    bin_ = np.linspace(min_,max_,bins)
+    bin_ = np.linspace(min,max,bins)
 
     # right = False implies bins[i-1]<=x<bins[i]
     digitized = np.digitize(data,bin_,right=False)
@@ -47,10 +49,11 @@ def cov_fi(wji,Ni):
     This is a function that calculates the covariance matrix of fi where
     fi = -ln(Qi/Q0).
 
-    wji: the weight matrices of different simulations (N,k) where N=number of observations 
-    in total, k=number of simulations
+    Args:
+        wji(np.ndarray): the weight matrices of different simulations (N,k) where N=number of observations 
+        in total, k=number of simulations
 
-    Ni: the number of observations in each simulation
+        Ni(np.ndarray): the number of observations in each simulation
 
     returns 
         covariance of fi in shape (k,k)

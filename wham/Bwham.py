@@ -5,20 +5,23 @@ from scipy.optimize import minimize
 from scipy.special import logsumexp
 from wham.lib.numeric import autograd_logsumexp
 
-
 class Bwham:
-    def __init__(self,xji,Ni,Ntwiddle,k,min_,max_,bins=101,beta=0.4036,unbiased=True):
-        """
-        xji: all the observation in dataset (Ntot,)
-        Ni: The number of observations in each simulation (S,)
-        Ntwiddle: The Ntwiddle for all the biased simulations (S-1,)
-        k: The parameter for the harmonic potential where U=0.5*k(x-xstar)**2
-        min_: the minimum of the bins
-        max_: the maximum of the bins
-        bins: number of bins
-        beta: beta=1/kbT where the default value is at T=298K
-        """
+    """
+    Args:
+        xji(np.ndarray): all the observation in dataset (Ntot,)
+        Ntwiddle(np.ndarray): The Ntwiddle for all the biased simulations (S-1,)
+        Ni(np.ndarray): The number of observations in each simulation (S,)
+        k(float): The parameter for the harmonic potential where U=0.5*k(x-xstar)**2
+        min_(float): the minimum of the bins
+        max_(float): the maximum of the bins
+        bins(int): number of bins
+        beta(float): beta=1/kbT where the default value is at T=298K
+        Ml(np.ndarray): Number of simulations in the lth bin from all simulations (M,)
+        Wil(np.ndarray): Biased energy from different simulations, 0 for unbiased simulation
+        fi0(np.ndarray): An array of zero's which can be used as the initial guess for the optimization
+    """
 
+    def __init__(self,xji,Ntwiddle,Ni,k,min_,max_,bins=101,beta=0.4036,unbiased=True):
         self.xji = xji
         self.Ni = Ni
         self.Ntwiddle = Ntwiddle
@@ -34,28 +37,14 @@ class Bwham:
         
     def initialize(self,unbiased=True):
         """
-        xji: All the observations from the umbrella sampling simulations (Ntot,)
+        Function that initializes some variables
 
-        Ntwiddle: The Ntwiddle in the biased simulations --> exclude the unbiased
-
-        min_: minimum of the bins
-
-        max_: maximum of the bins
-
-        k: the harmonic constant for the bias potential (in kJ/mol)
-
-        beta: 1/KbT (in kJ/mol), default value is for T=298K
-
-        bins: number of bins
-
-        unbiased: a boolean value signifying whether or not to include the unbiased simulation, 
-                  if True, a list of zero's will be included for Wil
-        
         returns:
-            Ml: Number of observations in bin l (M,)
-            Wil: beta*k*0.5*(n-nstar)**2 (S,M)
-            fi0: The initial guesses for the Bwham (array of 0's)
-            bins: the bins for the binned free energy 
+            1. Ml= observations in the lth bin from all simulations (M,)
+
+            2. Wil= The energy matrix where Wil = 0.5*beta*ki*(xl-xi)**2
+
+            3. bins= the binned vector (M,)
         """
         xji = self.xji
         Ntwiddle = self.Ntwiddle
@@ -94,14 +83,12 @@ class Bwham:
     def self_consistent(self,tol=1e-10,maxiter=1e5,print_every=-1):
         """
         Implementation of self consistent solver of binned wham
-
-        fi: initial guess for -log(Zi/Z0), passed in as a numpy array (S,)
-
-        Ni: Number of data counts in simulation i (S,)
         
-        Ml: Number of data in from simulation i=1,...,S in bin l (M,)
-        
-        Wil: 0.5*k*beta*((n-nstar)**2) (S,M) 
+        Args:
+            tol(float): the tolerance for convergence  (default 1e-10)
+            maxiter(int): maximum iterations possible for self consistent solver (default 1e5)
+            print_every(int): how many iterations to print result. A number less than 0 indicates never. (default -1)
+
 
         returns:
             1. fi = -log(Zi/Z0)
@@ -160,20 +147,18 @@ class Bwham:
 
     def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,iprint=-1):
         """
-        fi0: the initial guess of the gi's where gi=ln(fi)
-
-        Ni: Number of data counts in simulation i (S,)
-
-        Ml: Number of data from simulation i=1,...,S in bin l(M,)
-
-        Wil: 0.5*k*beta*(n-nstar)**2 (S,M)
-
+        Args:
+            ftol(float): tolerance parameter as set forth by scipy.minimize's 'L-BFGS-B' option (default 2.22e-09)
+            gtol(float): tolerance parameter as set forth by scipy.minimize's 'L-BFGS-B' option (default 1e-05)
+            maxiter(int): Maximum iteration as set forth by scipy.minimize (default 15000)
+            maxfun(int): Maximum function evaluation as set forth by scipy.minimize (default 15000)
+            iprint(int): The interval between which the user wants result to be printed. A number less than 0
+            indicates never. (default -1)
+        
         returns:
-            fi: where fi = -ln(Zi/Z0) (S,)
-
-            Fl: where Fl = -log(pl) (M,)
-
-            pl: shape (M,)
+            1. fi= -ln(Zi/Z0) (S,)
+            2. Fl= -log(pl) free energy at the lth bin (M,)
+            3. pl=probability at the lth bin (M,)
         """
         fi0,Ni,Wil,Ml = self.fi0,self.Ni,self.Wil,self.Ml
 
@@ -199,14 +184,9 @@ class Bwham:
     def get_pil(self):
         """
         Function that obtains the matrix of pil which is defined as 
-            pil = exp(fi)*exp(-Wil)*pl
-        inputs:
-            fi: -log(Zi/Z0) (S,)
-            Wil: energy matrix beta*0.5*k*(x-xstar)**2 (S,M)
-            pl: the probability of each bin (M,)
-
-        outputs:
-            pil: pil matrix with shape (S,M)
+        
+        Returns:
+            pil(np.ndarray): matrix with shape (S,M)
         """
         if self.fi is None:
             raise RuntimeError("Please run self consistent or Maximum_likelihood first!")
@@ -224,13 +204,17 @@ class Bwham:
 
 def Bwham_NLL_eq(x,Ni,Ml,Wil):
     """
-    x: shape (S,)
+    Args:
+        x: shape (S,)
 
-    Ni: Number of data counts in simulation i (S,)
+        Ni: Number of data counts in simulation i (S,)
 
-    Ml: Number of data in from simulation i=1,...,S in bin l (M,)
+        Ml: Number of data in from simulation i=1,...,S in bin l (M,)
 
-    Wil: 0.5*k*beta*(n-nstar)**2 (S,M)
+        Wil: 0.5*k*beta*(n-nstar)**2 (S,M)
+
+    Returns:
+        the value of the negative likelihood function
     """
     S = Wil.shape[0]
     M = Wil.shape[1]

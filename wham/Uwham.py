@@ -6,19 +6,19 @@ from scipy.special import logsumexp
 from wham.lib.numeric import autograd_logsumexp
 
 class Uwham:
+    """
+    A class that performs the unbinned calculations
+
+    Args:
+        xji(np.ndarray): all the observations inclduing biased and unbiased simulations (Ntot,)
+        k(float): the parameter in harmonic potential where U(x)=0.5*k*(x-xstar)**2
+        Ntwiddle(np.ndarray): The Ntwiddle of all the biased simulations (S-1,)
+        Ni(np.ndarray): Number of observations in each simulations (S,)
+        beta(float): 1/kbT, the default is at T=298K
+        uji(np.ndarray): The energy matrix, is zero for unbiased simulation (S,Ntot)
+        fi0(np.ndarray): The initial guess of fi (-ln(Zi/Z0)) for optimization (S,) 
+    """
     def __init__(self,xji,k,Ntwiddle,Ni,beta=0.4036,unbiased=True):
-        """
-        xji: all the observations in the shape of (Ntot,) including all the biased and unbiased simulations
-
-        k:   the parameter in harmonic potential
-
-        Ntwiddle: the Ntwiddle of all the biased simulations in the shape of (S-1,) where S is the number of 
-        simulation including the unbiased simulation
-
-        Ni: The number of observations in each simulation
-
-        beta:beta=1/kbT (default value is at T=298K)
-        """
         self.xji = xji
         self.k = k
         self.beta = beta
@@ -29,13 +29,11 @@ class Uwham:
         self.wji = None
         self.fi = None
         
-    def initialize(self,unbiased=True):
-        """
-        unbiased: a boolean, if True, the unbiased energy will be added ( a list of 0's)
-        
-        returns:
-            uji: beta*k*0.5*(n-nstar)**2 (S,Ntot)
-            fi0: initial guesses for Uwham (S,)
+    def initialize(self):
+        """initialize some parameters of the class 
+        Returns: 
+            1. uji= beta*k*0.5*(n-nstar)**2 (S,Ntot)
+            2. fi0=initial guesses for Uwham (S,)
         """ 
         Ntwiddle = self.Ntwiddle
         beta = self.beta
@@ -43,10 +41,7 @@ class Uwham:
         xji = self.xji
 
         # The number of simulations
-        if unbiased == True:
-            S = len(Ntwiddle) + 1
-        else:
-            S = len(Ntwiddle)
+        S = len(Ntwiddle) + 1
         
         fi0 = np.zeros((S,))
         Ntot = len(xji)
@@ -58,22 +53,15 @@ class Uwham:
         return uji,fi0
 
     def self_consistent(self,maxiter=1e5,tol=1e-8,print_every=-1):
-        """
-        performs self-consistent iterations of unbinned Wham 
+        """performs self-consistent iterations of unbinned Wham 
+        Args:
+            maxiter(int): specifies the maximum number of self consistent iterations are allowed
+            tol(float): specifies the tolerance of the iteration
+            print_every(int): The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result. 
 
-        input: 
-            fi0: initial guess of fi (-ln(Zi/Z0))
-            Ntot: the total amount of observations
-
-            uji: a numpy array of shape (S,Ntot) that corresponds to 0.5*beta*k*(N-Nstar)**2
-            Ni: a numpy array of shape (S,)
-
-        returns:
-            if converged:
-                wji: the weights of all the observations in the simulation (Ntot,)
-                fi: -ln(Zi/Z0) (S,)
-            else: 
-                returns None
+        Returns
+            1. wji=the weights of all the observations in the simulation (Ntot,)
+            2. fi=-ln(Zi/Z0) (S,)
         """
         # define variables
         uji = self.uji
@@ -123,18 +111,21 @@ class Uwham:
  
     def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1):
         """
-        fi0: initial guess for Uwham
-        uji: a matrix that holds all the energy for all the observations (beta*Wji) (shape(S,Ntot))
-        Ni: the count of observations in each simulation (shape(S,))
-        ftol: The iteration stops when (f^k-f^{k+1})/max(|f^{k}|,|f^{k+1}|,1) <= ftol
-        gtol: The iteration stop when max{|proj g_i | i=1,...,n}<=gtol
+        Optimizes the negative likelihood equation using LBFGS algorithm
 
-        returns:
-            if converged:
-                the optimal wji for each observation
-                fi = -ln(Zi/Z0)
-            else:
-                returns None
+        Args:
+            ftol(float): the tolerance as set forth by scipy.minimize (default 2.22e-09)
+
+            gtol(float): the tolerance as set forth by scipy.minimize (default 1e-05)  
+
+            maxiter(int): the maximum number of iterations as set forth by scipy.minimize. (default 15000)
+
+            maxfun(int): the maximum number of function evaluations as set forth by scipy.minimize. (default 15000)
+
+            iprint(int): the frequency at which the program outputs the result. Will not output if less than 0. (default -1)
+
+        Return:
+            wji(np.ndarray): the optimal weights for each observation if converged else None
         """
         uji = self.uji
         fi0 = self.fi0
@@ -163,21 +154,20 @@ class Uwham:
 
             return None
 
-    def compute_betaF_profile(self,min_,max_,bins=100):
+    def compute_betaF_profile(self,min,max,bins=100):
         """
         Function that calculates the Free energy for Uwham from the observations xji and
         weights wji
+        
+        Args:
+            min(float): the minimum of the binned vector (float/int)
+            max(float): the maximum of the binned vector (float/int)
+            bins(int): number of bins 
 
-        xji: Total observations from umbrella simulations (Ntot,)
-        wji: the weights associated with each of the observations (Ntot,)
-        min_: the minimum of the binned vector (float/int)
-        max_: the maximum of the binned vector (float/int)
-        bins: Number of bins between min_ and max_ (int)
-
-        returns:
-            bins_vec: binned vector from min_ to max_ (bins-1,)
-            p: the probability in each bin
-            F: The free energy in the binned vectors from min_ to max_ for all the simulations performed(S,bins-1)
+        Returns:
+            1. bins_vec= binned vector from min to max (bins-1,)
+            2. p=the probability in each bin
+            3. F=The free energy in the binned vectors from min to max for all the simulations performed(S,bins-1)
         """
         xji = self.xji
         if self.wji is None:
@@ -185,7 +175,7 @@ class Uwham:
 
         S = self.uji.shape[0]
 
-        bins_vec = np.linspace(min_,max_,bins)
+        bins_vec = np.linspace(min,max,bins)
         pji = self.get_pji()
         sum_ = pji.sum(axis=1)
 
@@ -213,13 +203,8 @@ class Uwham:
             pji_k = np.exp(fi)*np.exp(-Uji_k)*wji
         where wji is the unbiased weights 
 
-        input:
-            fi: -Log(Zi/Z0) (S,)
-            Uji: energy matrix=0.5*beta*k*(x-xji)**2 (S,Ntot)
-            wji: weight matrix(Ntot,)
-
-        returns:
-            pji: shape (S,Ntot)
+        Return:
+            pji(np.ndarray): pji matrix with shape (S,Ntot)
         """
         if self.fi is None and self.wji is None:
             raise RuntimeError("Please run either self_consistent or Maximum_likelihood first")
@@ -237,12 +222,13 @@ class Uwham:
     
 def Uwham_NLL_eq(fi,uji,Ni):
     """
-    fi: initial guess of the log of the partition coefficients Zk normalized by Z0 e.g. f1 = -ln(Z1/Z0) (shape (S,)) 
-    uji: beta*Wji energy matrix (shape(S,Ntot))
-    Ni: the count of observations in each simulation (shape(S,))
-    
-    returns:
-        Negative Log Likelihood of Uwham
+    Args:
+        fi(np.ndarray): initial guess of the log of the partition coefficients Zk normalized by Z0 e.g. f1 = -ln(Z1/Z0) (shape (S,)) 
+        uji(np.ndarray): beta*Wji energy matrix (shape(S,Ntot))
+        Ni(np.ndarray): the count of observations in each simulation (shape(S,))
+        
+    Return:
+        Negative Log Likelihood value of Uwham
     """
     Ntot = uji.shape[1]
     fi = fi - fi[-1]
