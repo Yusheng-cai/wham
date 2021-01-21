@@ -1,5 +1,7 @@
 # Prerequisites
 *.d
+wham/doc/_build/.DS_Store
+wham/doc/.DS_Store
 
 # Compiled Object files
 *.slo
@@ -57,3 +59,4 @@ wham/lib/__pycache__/
 wham/wham/__pycache__/
 wham/test/__pycache__/
 wham/__pycache__/
+__pycache__/
