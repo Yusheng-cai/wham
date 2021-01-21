@@ -30,8 +30,10 @@ class Uwham:
         self.fi = None
         
     def initialize(self):
-        """initialize some parameters of the class 
-        Returns: 
+        """
+        initialize some parameters of the class 
+
+        Return: 
             1. uji= beta*k*0.5*(n-nstar)**2 (S,Ntot)
             2. fi0=initial guesses for Uwham (S,)
         """ 
@@ -53,13 +55,15 @@ class Uwham:
         return uji,fi0
 
     def self_consistent(self,maxiter=1e5,tol=1e-8,print_every=-1):
-        """performs self-consistent iterations of unbinned Wham 
+        """
+        performs self-consistent iterations of unbinned Wham 
+
         Args:
             maxiter(int): specifies the maximum number of self consistent iterations are allowed
             tol(float): specifies the tolerance of the iteration
             print_every(int): The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result. 
 
-        Returns
+        Return:
             1. wji=the weights of all the observations in the simulation (Ntot,)
             2. fi=-ln(Zi/Z0) (S,)
         """
@@ -199,9 +203,7 @@ class Uwham:
 
     def get_pji(self):
         """
-        Function that obtains all the weights for unbiased as well as biased simulations following the equation
-            pji_k = np.exp(fi)*np.exp(-Uji_k)*wji
-        where wji is the unbiased weights 
+        Function that obtains all the weights for unbiased as well as biased simulations following the equation pji_k = np.exp(fi)*np.exp(-Uji_k)*wji where wji is the unbiased weights 
 
         Return:
             pji(np.ndarray): pji matrix with shape (S,Ntot)

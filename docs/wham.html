@@ -186,8 +186,8 @@
 <li><p><strong>Ntwiddle</strong> (<em>np.ndarray</em>) – The Ntwiddle for all the biased simulations (S-1,)</p></li>
 <li><p><strong>Ni</strong> (<em>np.ndarray</em>) – The number of observations in each simulation (S,)</p></li>
 <li><p><strong>k</strong> (<em>float</em>) – The parameter for the harmonic potential where U=0.5*k(x-xstar)**2</p></li>
-<li><p><strong>min_</strong> (<em>float</em>) – the minimum of the bins</p></li>
-<li><p><strong>max_</strong> (<em>float</em>) – the maximum of the bins</p></li>
+<li><p><strong>min</strong> (<em>float</em>) – the minimum of the bins</p></li>
+<li><p><strong>max</strong> (<em>float</em>) – the maximum of the bins</p></li>
 <li><p><strong>bins</strong> (<em>int</em>) – number of bins</p></li>
 <li><p><strong>beta</strong> (<em>float</em>) – beta=1/kbT where the default value is at T=298K</p></li>
 <li><p><strong>Ml</strong> (<em>np.ndarray</em>) – Number of simulations in the lth bin from all simulations (M,)</p></li>
@@ -318,31 +318,36 @@
 <dl class="method">
 <dt id="wham.Uwham.Uwham.initialize">
 <code class="sig-name descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>initialize some parameters of the class
-:returns:</p>
-<blockquote>
-<div><ol class="arabic simple">
+<dd><p>initialize some parameters of the class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ol class="arabic simple">
 <li><p>uji= beta*k*0.5*(n-nstar)**2 (S,Ntot)</p></li>
 <li><p>fi0=initial guesses for Uwham (S,)</p></li>
 </ol>
-</div></blockquote>
+</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="wham.Uwham.Uwham.self_consistent">
 <code class="sig-name descname">self_consistent</code><span class="sig-paren">(</span><em class="sig-param">maxiter=100000.0</em>, <em class="sig-param">tol=1e-08</em>, <em class="sig-param">print_every=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.self_consistent" title="Permalink to this definition">¶</a></dt>
-<dd><p>performs self-consistent iterations of unbinned Wham
-:param maxiter: specifies the maximum number of self consistent iterations are allowed
-:type maxiter: int
-:param tol: specifies the tolerance of the iteration
-:type tol: float
-:param print_every: The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result.
-:type print_every: int</p>
-<dl class="simple">
-<dt>Returns</dt><dd><ol class="arabic simple">
+<dd><p>performs self-consistent iterations of unbinned Wham</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>maxiter</strong> (<em>int</em>) – specifies the maximum number of self consistent iterations are allowed</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – specifies the tolerance of the iteration</p></li>
+<li><p><strong>print_every</strong> (<em>int</em>) – The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ol class="arabic simple">
 <li><p>wji=the weights of all the observations in the simulation (Ntot,)</p></li>
 <li><p>fi=-ln(Zi/Z0) (S,)</p></li>
 </ol>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -397,11 +402,7 @@ weights wji</p>
 <dl class="method">
 <dt id="wham.Uwham.Uwham.get_pji">
 <code class="sig-name descname">get_pji</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.get_pji" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Function that obtains all the weights for unbiased as well as biased simulations following the equation</dt><dd><p>pji_k = np.exp(fi)*np.exp(-Uji_k)*wji</p>
-</dd>
-</dl>
-<p>where wji is the unbiased weights</p>
+<dd><p>Function that obtains all the weights for unbiased as well as biased simulations following the equation pji_k = np.exp(fi)*np.exp(-Uji_k)*wji where wji is the unbiased weights</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>pji matrix with shape (S,Ntot)</p>

@@ -1,9 +1,9 @@
 wham
 ============
-
 .. toctree::
 
    wham.lib
+
 wham.Bwham 
 -----------------
 
