@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>wham.lib &mdash; Wham 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="wham" href="wham.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Wham
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="wham.html">wham</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">wham.lib</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-wham.lib.numeric">wham.lib.numeric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-wham.lib.wham_utils">wham.lib.wham_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wham.html#module-wham.Bwham">wham.Bwham</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wham.html#module-wham.Uwham">wham.Uwham</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Wham</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">&lt;no title&gt;</a> &raquo;</li>
+        
+          <li><a href="wham.html">wham</a> &raquo;</li>
+        
+      <li>wham.lib</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/wham.lib.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="wham-lib">
+<h1>wham.lib<a class="headerlink" href="#wham-lib" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-wham.lib.numeric">
+<span id="wham-lib-numeric"></span><h2>wham.lib.numeric<a class="headerlink" href="#module-wham.lib.numeric" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="wham.lib.numeric.safe_divide">
+<code class="sig-prename descclassname">wham.lib.numeric.</code><code class="sig-name descname">safe_divide</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.lib.numeric.safe_divide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs divide dividing a 0 in the denominator would be treated as 0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>np.ndarray</em>) – a vector</p></li>
+<li><p><strong>b</strong> (<em>np.ndarray</em>) – a vector</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A vector which is equal to a/b that ignores 0</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="wham.lib.numeric.safe_log">
+<code class="sig-prename descclassname">wham.lib.numeric.</code><code class="sig-name descname">safe_log</code><span class="sig-paren">(</span><em class="sig-param">a</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.lib.numeric.safe_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Safely performs logarithms</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="wham.lib.numeric.autograd_logsumexp">
+<code class="sig-prename descclassname">wham.lib.numeric.</code><code class="sig-name descname">autograd_logsumexp</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b=1</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.lib.numeric.autograd_logsumexp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs logsumexp using the numpy from autograd
+np.log(np.sum(a*np.exp(b)))</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<em>np.ndarray</em>) – The matrix/vector to be exponentiated</p></li>
+<li><p><strong>b</strong> (<em>np.ndarray</em>) – The number at which to multiply exp(a)</p></li>
+<li><p><strong>axis</strong> (<em>int</em>) – the axis at which to sum over</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a matrix that is the logsumexp result of a &amp; b</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-wham.lib.wham_utils">
+<span id="wham-lib-wham-utils"></span><h2>wham.lib.wham_utils<a class="headerlink" href="#module-wham.lib.wham_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="wham.lib.wham_utils.read_dat">
+<code class="sig-prename descclassname">wham.lib.wham_utils.</code><code class="sig-name descname">read_dat</code><span class="sig-paren">(</span><em class="sig-param">file_path</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.lib.wham_utils.read_dat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that reads the .dat from INDUS simulations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – the path to the file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an numpy array that contains the N and Ntilde from the INDUS simulation (N, Ntilde) -&gt; where both are of shape (nobs,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="wham.lib.wham_utils.make_bins">
+<code class="sig-prename descclassname">wham.lib.wham_utils.</code><code class="sig-name descname">make_bins</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">min</em>, <em class="sig-param">max</em>, <em class="sig-param">bins=101</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.lib.wham_utils.make_bins" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that bins some data within min and max</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – the data that you want to bin, pass in numpy array (shape(N,))</p></li>
+<li><p><strong>min</strong> (<em>float</em>) – minimum of the bins</p></li>
+<li><p><strong>max</strong> (<em>float</em>) – maximum of the bins</p></li>
+<li><p><strong>bins</strong> (<em>int</em>) – number of bins to make</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tuple of (bins,binned_vec)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="wham.lib.wham_utils.cov_fi">
+<code class="sig-prename descclassname">wham.lib.wham_utils.</code><code class="sig-name descname">cov_fi</code><span class="sig-paren">(</span><em class="sig-param">wji</em>, <em class="sig-param">Ni</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.lib.wham_utils.cov_fi" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a function that calculates the covariance matrix of fi where
+fi = -ln(Qi/Q0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wji</strong> (<em>np.ndarray</em>) – the weight matrices of different simulations (N,k) where N=number of observations</p></li>
+<li><p><strong>total</strong><strong>, </strong><strong>k=number of simulations</strong> (<em>in</em>) – </p></li>
+<li><p><strong>Ni</strong> (<em>np.ndarray</em>) – the number of observations in each simulation</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>returns</dt><dd><p>covariance of fi in shape (k,k)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="wham.html" class="btn btn-neutral float-left" title="wham" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Yusheng Cai.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
