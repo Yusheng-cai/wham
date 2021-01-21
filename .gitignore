@@ -1,7 +1,6 @@
 # Prerequisites
 *.d
-wham/doc/_build/.DS_Store
-wham/doc/.DS_Store
+wham/doc/_build/
 
 # Compiled Object files
 *.slo
