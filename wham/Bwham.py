@@ -21,21 +21,21 @@ class Bwham:
         fi0(np.ndarray): An array of zero's which can be used as the initial guess for the optimization
     """
 
-    def __init__(self,xji,Ntwiddle,Ni,k,min_,max_,bins=101,beta=0.4036,unbiased=True):
+    def __init__(self,xji,Ntwiddle,Ni,k,min_,max_,bins=101,beta=0.4036):
         self.xji = xji
-        self.Ni = Ni
         self.Ntwiddle = Ntwiddle
+        self.Ni = Ni
         self.min_ = min_
         self.max_ = max_
         self.bins = bins
         self.beta = beta
         self.k = k
-        self.Ml,self.Wil,self.fi0,self.bins = self.initialize(unbiased=unbiased)
+        self.Ml,self.Wil,self.fi0,self.bins = self.initialize()
 
         self.fi = None
         self.pl = None
         
-    def initialize(self,unbiased=True):
+    def initialize(self):
         """
         Function that initializes some variables
 
@@ -54,10 +54,7 @@ class Bwham:
         beta = self.beta
         k = self.k
 
-        if unbiased == True:
-            S = len(Ntwiddle)+1
-        else:
-            S = len(Ntwiddle)
+        S = len(Ntwiddle)+1
 
         M = bins-1
 

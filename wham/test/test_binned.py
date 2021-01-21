@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,"../wham")
+sys.path.insert(0,"..")
 from Bwham import Bwham
 from wham.lib.wham_utils import *
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ import numpy as np
 
 def gather_data():
     nlist = ["-5.0","0.0","5.0","10.0","15.0","20.0","25.0","unbiased"]
-    Ntwiddle = [-5,0,5,10,15,20,25]
+    Ntwiddle = np.array([-5,0,5,10,15,20,25])
     data_list = []
     beta = 1000/(8.314*300)
     k = 0.98
@@ -43,7 +43,7 @@ def test_binned():
     nbins = 36
     correct = correct_data()
     
-    b = Bwham(xji,Ni,Ntwiddle,k,min_,max_,bins=nbins,beta=beta,unbiased=True)
+    b = Bwham(xji,Ntwiddle,Ni,k,min_,max_,bins=nbins,beta=beta)
     _,F,_ = b.self_consistent()
     print(np.linalg.norm(F - correct,2)/len(F)) 
 
@@ -57,7 +57,7 @@ def test_binned_nll():
     nbins = 36
     correct = correct_data()
     
-    b = Bwham(xji,Ni,Ntwiddle,k,min_,max_,bins=nbins,beta=beta,unbiased=True)
+    b = Bwham(xji,Ntwiddle,Ni,k,min_,max_,bins=nbins,beta=beta)
     _,F,_ = b.Maximum_likelihood()
     
     print(np.linalg.norm(F - correct,2)/len(F))

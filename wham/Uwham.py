@@ -18,12 +18,12 @@ class Uwham:
         uji(np.ndarray): The energy matrix, is zero for unbiased simulation (S,Ntot)
         fi0(np.ndarray): The initial guess of fi (-ln(Zi/Z0)) for optimization (S,) 
     """
-    def __init__(self,xji,k,Ntwiddle,Ni,beta=0.4036,unbiased=True):
+    def __init__(self,xji,k,Ntwiddle,Ni,beta=0.4036):
         self.xji = xji
         self.k = k
         self.beta = beta
         self.Ntwiddle = Ntwiddle
-        self.uji,self.fi0 = self.initialize(unbiased=unbiased)
+        self.uji,self.fi0 = self.initialize()
         self.Ni = Ni
 
         self.wji = None

@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'../wham')
+sys.path.insert(0,'..')
 from Uwham import Uwham
 from Bwham import *
 import numpy as np
@@ -41,9 +41,10 @@ def test_u_nll():
     xji,Ni,Ntwiddle,beta,k = gather_data()
     correct = correct_data()
     
-    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta,unbiased=True)
+    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta)
     u.Maximum_likelihood()
-    ubins,_,F = u.compute_betaF_profile(0,35,bins=36)
+    ubins,F,_ = u.compute_betaF_profile(0,35,bins=36)
+    F = F[-1]
     print("MLE error:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
 
     assert np.linalg.norm(F - correct,2)/len(F) < 0.02 
@@ -53,9 +54,10 @@ def test_u():
     xji,Ni,Ntwiddle,beta,k = gather_data()
     correct = correct_data()
     
-    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta,unbiased=True)
+    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta)
     u.self_consistent()
-    ubins,_,F = u.compute_betaF_profile(0,35,bins=36)
+    ubins,F,_ = u.compute_betaF_profile(0,35,bins=36)
+    F = F[-1]
     print("self consistent error:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
 
     assert np.linalg.norm(F - correct,2)/len(F) < 0.02  
