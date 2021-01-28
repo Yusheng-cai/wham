@@ -55,7 +55,8 @@ def test_u():
     correct = correct_data()
     
     u = Uwham(xji,k,Ntwiddle,Ni,beta=beta)
-    u.self_consistent()
+    a,b = u.self_consistent()
+    print(b)
     ubins,F,_ = u.compute_betaF_profile(0,35,bins=36)
     F = F[-1]
     print("self consistent error:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
