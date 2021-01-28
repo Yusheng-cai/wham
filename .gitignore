@@ -60,3 +60,6 @@ wham/test/__pycache__/
 wham/__pycache__/
 __pycache__/
 wham/docsource/_build/
+wham/test/data/*.ipynb
+wham/test/data/.ipynb_checkpoints/
+wham/test/data/water.dat
