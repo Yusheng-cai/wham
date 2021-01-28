@@ -37,17 +37,44 @@ def safe_log(a):
 
     return ans
 
-def autograd_logsumexp(a,b=1,axis=0):
+def alogsumexp(a,b=None,axis=None,keepdims=False):
     """
     Performs logsumexp using the numpy from autograd
     np.log(np.sum(a*np.exp(b)))
 
     Args:
-        a(np.ndarray): The matrix/vector to be exponentiated
-        b(np.ndarray): The number at which to multiply exp(a)
-        axis(int): the axis at which to sum over
+        a(np.ndarray): The matrix/vector to be exponentiated  (shape (N,..))
+        b(np.ndarray): The number at which to multiply exp(a) (shape (N,)) (default None)
+        axis(int): the axis at which to sum over (defaul None)
+        keepdims(bool): whether to keep the result as the same shape (default False)
 
     Return:
         a matrix that is the logsumexp result of a & b
     """
-    return nup.log(nup.sum(b*nup.exp(a),axis=axis))
+    if b is not None:
+        if nup.any(b==0):
+            a = a + 0. # promote to at least float
+            a[b == 0] = -nup.inf
+
+    # find maximum of a along the axis provided 
+    a_max = nup.amax(a,axis=axis,keepdims=True)
+
+    if b is not None:
+        b = nup.asarray(b)
+        tmp = b * nup.exp(a-a_max)
+    else:
+        tmp = nup.exp(a-a_max)
+
+    
+    #suppress warnings about log of zero
+    with nup.errstate(divide='ignore'):
+        s = nup.sum(tmp,axis=axis,keepdims=keepdims)
+
+    out = nup.log(s)
+
+    if not keepdims:
+        a_max = nup.squeeze(a_max,axis=axis)
+
+    out += a_max
+
+    return out 

@@ -3,7 +3,7 @@ import numpy as np
 from autograd import value_and_grad
 from scipy.optimize import minimize
 from scipy.special import logsumexp
-from wham.lib.numeric import autograd_logsumexp
+from wham.lib.numeric import alogsumexp
 
 class Uwham:
     """
@@ -18,6 +18,7 @@ class Uwham:
         uji(np.ndarray): The energy matrix, is zero for unbiased simulation (S,Ntot)
         fi0(np.ndarray): The initial guess of fi (-ln(Zi/Z0)) for optimization (S,) 
     """
+
     def __init__(self,xji,k,Ntwiddle,Ni,beta=0.4036):
         self.xji = xji
         self.k = k
@@ -85,6 +86,7 @@ class Uwham:
             fi = - logsumexp(-uji + np.repeat(lnwji[np.newaxis,:],S,axis=0),axis=1)
 
             fi = fi - fi[-1] #subtract the unbiased fi
+            print(fi)
 
             error = np.max(np.abs(fi-fi_prev))
 
@@ -233,13 +235,9 @@ def Uwham_NLL_eq(fi,uji,Ni):
         Negative Log Likelihood value of Uwham
     """
     Ntot = uji.shape[1]
-    fi = fi - fi[-1]
-
-    first_term = 1/Ntot*nup.sum(autograd_logsumexp(nup.repeat(fi[:,nup.newaxis],Ntot,axis=1)-uji,\
+    first_term = 1/Ntot*nup.sum(alogsumexp(nup.repeat(fi[:,nup.newaxis],Ntot,axis=1)-uji,\
                                                 b=np.repeat(Ni[:,np.newaxis]/Ntot,Ntot,axis=1),axis=0))
 
     second_term = -nup.sum(Ni*fi)/nup.sum(Ni)
 
     return first_term + second_term
-
-

@@ -3,7 +3,7 @@ import numpy as np
 from autograd import value_and_grad
 from scipy.optimize import minimize
 from scipy.special import logsumexp
-from wham.lib.numeric import autograd_logsumexp
+from wham.lib.numeric import alogsumexp
 
 class Bwham:
     """
@@ -220,7 +220,7 @@ def Bwham_NLL_eq(x,Ni,Ml,Wil):
     first_term = -(Ni*x).sum()
     
     log_pl = nup.log(Ml) - \
-            autograd_logsumexp(nup.repeat(x[:,nup.newaxis],M,axis=1)-Wil,b=nup.repeat(Ni[:,nup.newaxis],M,axis=1),axis=0)
+            alogsumexp(nup.repeat(x[:,nup.newaxis],M,axis=1)-Wil,b=nup.repeat(Ni[:,nup.newaxis],M,axis=1),axis=0)
 
     second_term = (Ml * log_pl).sum(axis=0)
 
