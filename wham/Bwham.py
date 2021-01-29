@@ -178,9 +178,10 @@ class Bwham:
             print("Optimization has not converged")
             return None
 
-    def get_pil(self):
+    def get_lnpil(self):
         """
-        Function that obtains the matrix of pil which is defined as 
+        Function that obtains the matrix of logpil which is defined as 
+                lnpil = fi - bUil + pl
         
         Returns:
             pil(np.ndarray): matrix with shape (S,M)
@@ -195,14 +196,14 @@ class Bwham:
         M = Wil.shape[1]
         S = Wil.shape[0]
 
-        pil = np.exp(np.repeat(fi[:,np.newaxis],M,axis=1))*np.exp(-Wil)*np.repeat(pl[np.newaxis,:],S,axis=0)
+        lnpil = np.repeat(fi[:,np.newaxis],M,axis=1)-Wil + np.repeat(pl[np.newaxis,:],S,axis=0)
 
-        return pil
+        return lnpil
 
-def Bwham_NLL_eq(x,Ni,Ml,Wil):
+def Bwham_NLL_eq(fi,Ni,Ml,Wil):
     """
     Args:
-        x: shape (S,)
+        fi: shape (S,)
 
         Ni: Number of data counts in simulation i (S,)
 
@@ -216,15 +217,14 @@ def Bwham_NLL_eq(x,Ni,Ml,Wil):
     S = Wil.shape[0]
     M = Wil.shape[1]
     
-    x = x - x[-1]
-    first_term = -(Ni*x).sum()
+    fi = fi - fi[-1]
+    first_term = -(Ni*fi).sum()
     
     log_pl = nup.log(Ml) - \
-            alogsumexp(nup.repeat(x[:,nup.newaxis],M,axis=1)-Wil,b=nup.repeat(Ni[:,nup.newaxis],M,axis=1),axis=0)
+            alogsumexp(nup.repeat(fi[:,nup.newaxis],M,axis=1)-Wil,b=nup.repeat(Ni[:,nup.newaxis],M,axis=1),axis=0)
 
     second_term = (Ml * log_pl).sum(axis=0)
 
 
     return first_term - second_term
-
 
