@@ -7,7 +7,7 @@ from wham.lib.numeric import alogsumexp
 
 class Uwham:
     """
-    A class that performs the unbinned calculations
+    A class that performs the binless Wham calculations or Mbar
 
     Args:
         xji(np.ndarray): all the observations inclduing biased and unbiased simulations (Ntot,)
@@ -58,12 +58,12 @@ class Uwham:
 
     def self_consistent(self,maxiter=1e5,tol=1e-7,print_every=-1):
         """
-        performs self-consistent iterations of unbinned Wham 
+        performs self-consistent iteration optimization of binless Wham 
 
         Args:
-            maxiter(int): specifies the maximum number of self consistent iterations are allowed
-            tol(float): specifies the tolerance of the iteration
-            print_every(int): The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result. 
+            maxiter(int): specifies the maximum number of self consistent iterations are allowed (default 1e5)
+            tol(float): specifies the tolerance of the iteration, max|fn+1-fn|/max|fn| (default 1e-7)
+            print_every(int): The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result.(default -1, so nothing will be printed) 
 
         Return:
             1. wji=the weights of all the observations in the simulation (Ntot,)
@@ -117,7 +117,7 @@ class Uwham:
  
     def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1):
         """
-        Optimizes the negative likelihood equation using LBFGS algorithm
+        Optimizes the negative likelihood equation of binless Wham using LBFGS algorithm as implemented by scipy.minimize, the derivatives of the MLE is found by automatic differentiation using autograd 
 
         Args:
             ftol(float): the tolerance as set forth by scipy.minimize (default 2.22e-09)
@@ -133,7 +133,6 @@ class Uwham:
         Return:
             lnwji(np.ndarray): log of the optimal weights for each observation if converged else None
         """
-        print("NEW COMMAND")
         buji = self.buji
         fi0 = self.fi0
         Ni = self.Ni
@@ -163,7 +162,7 @@ class Uwham:
     def compute_betaF_profile(self,min,max,bins=100):
         """
         Function that calculates the Free energy for Uwham from the observations xji and
-        weights lnwji
+        log of the weights lnwji
         
         Args:
             min(float): the minimum of the binned vector (float/int)
@@ -180,15 +179,17 @@ class Uwham:
             raise RuntimeError("Please run Maximum_likelihood or self_consistent first to obtain weights lnwji")
 
         S = self.buji.shape[0]
-
         bins_vec = np.linspace(min,max,bins)
-        # the bin size 
-        dl = bins_vec[1] - bins_vec[0]
 
+        # the bin size dl 
+        dl = bins_vec[1] - bins_vec[0]
+        
+        # find lnpji from all simulations (S,Ntot)
         lnpji = self.get_lnpji()
 
-        # The weighted probability for each bin
+        # The log probability for each bin (S,bins-1)
         logp = np.zeros((S,bins-1))
+        # Create the free energy matrix with the same shape
         F = np.zeros_like(logp)
 
         # This will be a vector such as np.array([1,2,3,2,..]) indicating which bin each element falls into
@@ -207,10 +208,10 @@ class Uwham:
 
     def get_lnpji(self):
         """
-        Function that obtains all the weights for unbiased as well as biased simulations following the equation pji_k = np.exp(fi)*np.exp(-buji_k)*wji where wji is the unbiased weights 
+        Function that obtains all the weights for unbiased as well as biased simulations following the equation lnpji_k = fi-buji_k+lnwji where wji is the unbiased weights 
 
         Return:
-            pji(np.ndarray): pji matrix with shape (S,Ntot)
+            lnpji(np.ndarray): log of the pji matrix with shape (S,Ntot)
         """
         if self.fi is None and self.wji is None:
             raise RuntimeError("Please run either self_consistent or Maximum_likelihood first")
