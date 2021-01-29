@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0,'..')
 sys.path.insert(0,"../lib/")
-from Uwham import Uwham
+from Uwham import *
 from Bwham import *
 import numpy as np
 from wham_utils import read_dat
@@ -44,12 +44,14 @@ def test_u_nll():
     correct = correct_data()
     
     u = Uwham(xji,k,Ntwiddle,Ni,beta=beta)
-    u.Maximum_likelihood(ftol=1e-15)
+    a,b = u.Maximum_likelihood(ftol=1e-15)
     ubins,F,f = u.compute_betaF_profile(0,35,bins=36)
     print("Free energy of MLE is ",F[-1])
     F = F[-1]
+    NLL = Uwham_NLL_eq(b,u.buji,Ni)
 
-    print("MLE error:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
+    print("MLE error with reference is:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
+    print("MLE NLL is {}".format(NLL))
 
     assert np.linalg.norm(F - correct,2)/len(F) < 0.05 
     return ubins,F
@@ -62,9 +64,11 @@ def test_u():
     a,b = u.self_consistent(tol=1e-8)
     ubins,F,f = u.compute_betaF_profile(0,35,bins=36)
     print("Free energy of binless self consistent is ",F[-1])
+    NLL = Uwham_NLL_eq(b,u.buji,Ni)
 
     F = F[-1]
-    print("self consistent error:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
+    print("self consistent error with reference is:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
+    print("self consistent NLL is {}".format(NLL))
 
     assert np.linalg.norm(F - correct,2)/len(F) < 0.05  
 

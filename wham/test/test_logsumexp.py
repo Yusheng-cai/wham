@@ -5,7 +5,6 @@ import numpy as np
 from scipy.special import logsumexp
 
 def test_lsp():
-    test_data = np.array([100,109.9,109.8,110.1])
+    test_data = np.random.randn(10000)+100
     
     assert np.allclose(logsumexp(test_data),alogsumexp(test_data))
-
