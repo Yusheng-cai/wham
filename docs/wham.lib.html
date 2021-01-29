@@ -195,16 +195,17 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="wham.lib.numeric.autograd_logsumexp">
-<code class="sig-prename descclassname">wham.lib.numeric.</code><code class="sig-name descname">autograd_logsumexp</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b=1</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.lib.numeric.autograd_logsumexp" title="Permalink to this definition">¶</a></dt>
+<dt id="wham.lib.numeric.alogsumexp">
+<code class="sig-prename descclassname">wham.lib.numeric.</code><code class="sig-name descname">alogsumexp</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b=None</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.lib.numeric.alogsumexp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs logsumexp using the numpy from autograd
 np.log(np.sum(a*np.exp(b)))</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>a</strong> (<em>np.ndarray</em>) – The matrix/vector to be exponentiated</p></li>
-<li><p><strong>b</strong> (<em>np.ndarray</em>) – The number at which to multiply exp(a)</p></li>
-<li><p><strong>axis</strong> (<em>int</em>) – the axis at which to sum over</p></li>
+<li><p><strong>a</strong> (<em>np.ndarray</em>) – The matrix/vector to be exponentiated  (shape (N,..))</p></li>
+<li><p><strong>b</strong> (<em>np.ndarray</em>) – The number at which to multiply exp(a) (shape (N,)) (default None)</p></li>
+<li><p><strong>axis</strong> (<em>int</em>) – the axis at which to sum over (defaul None)</p></li>
+<li><p><strong>keepdims</strong> (<em>bool</em>) – whether to keep the result as the same shape (default False)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

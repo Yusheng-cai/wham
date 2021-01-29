@@ -261,9 +261,12 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="wham.Bwham.Bwham.get_pil">
-<code class="sig-name descname">get_pil</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wham.Bwham.Bwham.get_pil" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function that obtains the matrix of pil which is defined as</p>
+<dt id="wham.Bwham.Bwham.get_lnpil">
+<code class="sig-name descname">get_lnpil</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wham.Bwham.Bwham.get_lnpil" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Function that obtains the matrix of logpil which is defined as</dt><dd><p>lnpil = fi - bUil + pl</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>matrix with shape (S,M)</p>
@@ -278,11 +281,11 @@
 
 <dl class="function">
 <dt id="wham.Bwham.Bwham_NLL_eq">
-<code class="sig-prename descclassname">wham.Bwham.</code><code class="sig-name descname">Bwham_NLL_eq</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">Ni</em>, <em class="sig-param">Ml</em>, <em class="sig-param">Wil</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Bwham.Bwham_NLL_eq" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">wham.Bwham.</code><code class="sig-name descname">Bwham_NLL_eq</code><span class="sig-paren">(</span><em class="sig-param">fi</em>, <em class="sig-param">Ni</em>, <em class="sig-param">Ml</em>, <em class="sig-param">Wil</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Bwham.Bwham_NLL_eq" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – shape (S,)</p></li>
+<li><p><strong>fi</strong> – shape (S,)</p></li>
 <li><p><strong>Ni</strong> – Number of data counts in simulation i (S,)</p></li>
 <li><p><strong>Ml</strong> – Number of data in from simulation i=1,…,S in bin l (M,)</p></li>
 <li><p><strong>Wil</strong> – 0.5*k*beta*(n-nstar)**2 (S,M)</p></li>
@@ -301,7 +304,7 @@
 <dt id="wham.Uwham.Uwham">
 <em class="property">class </em><code class="sig-prename descclassname">wham.Uwham.</code><code class="sig-name descname">Uwham</code><span class="sig-paren">(</span><em class="sig-param">xji</em>, <em class="sig-param">k</em>, <em class="sig-param">Ntwiddle</em>, <em class="sig-param">Ni</em>, <em class="sig-param">beta=0.4036</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A class that performs the unbinned calculations</p>
+<p>A class that performs the binless Wham calculations or Mbar</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -310,7 +313,7 @@
 <li><p><strong>Ntwiddle</strong> (<em>np.ndarray</em>) – The Ntwiddle of all the biased simulations (S-1,)</p></li>
 <li><p><strong>Ni</strong> (<em>np.ndarray</em>) – Number of observations in each simulations (S,)</p></li>
 <li><p><strong>beta</strong> (<em>float</em>) – 1/kbT, the default is at T=298K</p></li>
-<li><p><strong>uji</strong> (<em>np.ndarray</em>) – The energy matrix, is zero for unbiased simulation (S,Ntot)</p></li>
+<li><p><strong>buji</strong> (<em>np.ndarray</em>) – The energy matrix, is zero for unbiased simulation (S,Ntot)</p></li>
 <li><p><strong>fi0</strong> (<em>np.ndarray</em>) – The initial guess of fi (-ln(Zi/Z0)) for optimization (S,)</p></li>
 </ul>
 </dd>
@@ -322,7 +325,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><ol class="arabic simple">
-<li><p>uji= beta*k*0.5*(n-nstar)**2 (S,Ntot)</p></li>
+<li><p>buji= beta*k*0.5*(n-nstar)**2 (S,Ntot)</p></li>
 <li><p>fi0=initial guesses for Uwham (S,)</p></li>
 </ol>
 </p>
@@ -332,14 +335,14 @@
 
 <dl class="method">
 <dt id="wham.Uwham.Uwham.self_consistent">
-<code class="sig-name descname">self_consistent</code><span class="sig-paren">(</span><em class="sig-param">maxiter=100000.0</em>, <em class="sig-param">tol=1e-08</em>, <em class="sig-param">print_every=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.self_consistent" title="Permalink to this definition">¶</a></dt>
-<dd><p>performs self-consistent iterations of unbinned Wham</p>
+<code class="sig-name descname">self_consistent</code><span class="sig-paren">(</span><em class="sig-param">maxiter=100000.0</em>, <em class="sig-param">tol=1e-07</em>, <em class="sig-param">print_every=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.self_consistent" title="Permalink to this definition">¶</a></dt>
+<dd><p>performs self-consistent iteration optimization of binless Wham</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>maxiter</strong> (<em>int</em>) – specifies the maximum number of self consistent iterations are allowed</p></li>
-<li><p><strong>tol</strong> (<em>float</em>) – specifies the tolerance of the iteration</p></li>
-<li><p><strong>print_every</strong> (<em>int</em>) – The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result.</p></li>
+<li><p><strong>maxiter</strong> (<em>int</em>) – specifies the maximum number of self consistent iterations are allowed (default 1e5)</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – specifies the tolerance of the iteration, max|fn+1-fn|/max|fn| (default 1e-7)</p></li>
+<li><p><strong>print_every</strong> (<em>int</em>) – The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result.(default -1, so nothing will be printed)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -355,7 +358,7 @@
 <dl class="method">
 <dt id="wham.Uwham.Uwham.Maximum_likelihood">
 <code class="sig-name descname">Maximum_likelihood</code><span class="sig-paren">(</span><em class="sig-param">ftol=2.22e-09</em>, <em class="sig-param">gtol=1e-05</em>, <em class="sig-param">maxiter=15000</em>, <em class="sig-param">maxfun=15000</em>, <em class="sig-param">disp=None</em>, <em class="sig-param">iprint=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.Maximum_likelihood" title="Permalink to this definition">¶</a></dt>
-<dd><p>Optimizes the negative likelihood equation using LBFGS algorithm</p>
+<dd><p>Optimizes the negative likelihood equation of binless Wham using LBFGS algorithm as implemented by scipy.minimize, the derivatives of the MLE is found by automatic differentiation using autograd</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -367,10 +370,10 @@
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the optimal weights for each observation if converged else None</p>
+<dd class="field-even"><p>log of the optimal weights for each observation if converged else None</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>wji(np.ndarray)</p>
+<dd class="field-odd"><p>lnwji(np.ndarray)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -379,7 +382,7 @@
 <dt id="wham.Uwham.Uwham.compute_betaF_profile">
 <code class="sig-name descname">compute_betaF_profile</code><span class="sig-paren">(</span><em class="sig-param">min</em>, <em class="sig-param">max</em>, <em class="sig-param">bins=100</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.compute_betaF_profile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that calculates the Free energy for Uwham from the observations xji and
-weights wji</p>
+log of the weights lnwji</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -400,15 +403,15 @@ weights wji</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="wham.Uwham.Uwham.get_pji">
-<code class="sig-name descname">get_pji</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.get_pji" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function that obtains all the weights for unbiased as well as biased simulations following the equation pji_k = np.exp(fi)*np.exp(-Uji_k)*wji where wji is the unbiased weights</p>
+<dt id="wham.Uwham.Uwham.get_lnpji">
+<code class="sig-name descname">get_lnpji</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham.get_lnpji" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that obtains all the weights for unbiased as well as biased simulations following the equation lnpji_k = fi-buji_k+lnwji where wji is the unbiased weights</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>pji matrix with shape (S,Ntot)</p>
+<dd class="field-odd"><p>log of the pji matrix with shape (S,Ntot)</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>pji(np.ndarray)</p>
+<dd class="field-even"><p>lnpji(np.ndarray)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -417,12 +420,12 @@ weights wji</p>
 
 <dl class="function">
 <dt id="wham.Uwham.Uwham_NLL_eq">
-<code class="sig-prename descclassname">wham.Uwham.</code><code class="sig-name descname">Uwham_NLL_eq</code><span class="sig-paren">(</span><em class="sig-param">fi</em>, <em class="sig-param">uji</em>, <em class="sig-param">Ni</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham_NLL_eq" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">wham.Uwham.</code><code class="sig-name descname">Uwham_NLL_eq</code><span class="sig-paren">(</span><em class="sig-param">fi</em>, <em class="sig-param">buji</em>, <em class="sig-param">Ni</em><span class="sig-paren">)</span><a class="headerlink" href="#wham.Uwham.Uwham_NLL_eq" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>fi</strong> (<em>np.ndarray</em>) – initial guess of the log of the partition coefficients Zk normalized by Z0 e.g. f1 = -ln(Z1/Z0) (shape (S,))</p></li>
-<li><p><strong>uji</strong> (<em>np.ndarray</em>) – beta*Wji energy matrix (shape(S,Ntot))</p></li>
+<li><p><strong>buji</strong> (<em>np.ndarray</em>) – beta*Wji energy matrix (shape(S,Ntot))</p></li>
 <li><p><strong>Ni</strong> (<em>np.ndarray</em>) – the count of observations in each simulation (shape(S,))</p></li>
 </ul>
 </dd>
