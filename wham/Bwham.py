@@ -53,12 +53,13 @@ class Bwham:
         max_ = self.max_
         beta = self.beta
         k = self.k
+        jitter = 1e-8
 
         S = len(Ntwiddle)+1
 
         M = bins-1
 
-        fi0 = np.zeros((S,))
+        fi0 = np.zeros((S,)) + jitter
         
         # Find Ml
         bins_ = np.linspace(min_,max_,bins)
@@ -114,7 +115,7 @@ class Bwham:
             fi = fi - fi[-1]
 
             # find error
-            error = np.linalg.norm(fi-fi_prev,2)
+            error = np.max(abs(fi-fi_prev)[:-1])/np.max(abs(fi_prev[:-1]))
 
             if print_flag:
                 if iter_ % print_every == 0:
@@ -227,4 +228,5 @@ def Bwham_NLL_eq(fi,Ni,Ml,Wil):
 
 
     return first_term - second_term
+
 

@@ -24,8 +24,8 @@ class Uwham:
         self.k = k
         self.beta = beta
         self.Ntwiddle = Ntwiddle
-        self.buji,self.fi0 = self.initialize()
         self.Ni = Ni
+        self.buji,self.fi0 = self.initialize()
 
         self.lnwji = None
         self.fi = None
@@ -42,17 +42,17 @@ class Uwham:
         beta = self.beta
         k = self.k
         xji = self.xji
-        jitter = 1e-8
-
-        # The number of simulations
-        S = len(Ntwiddle) + 1
+        Ni = self.Ni
+        S,Ntot = Ni.shape[0],xji.shape[0]
         
-        fi0 = np.ones((S,))*jitter
-        Ntot = len(xji)
-
+        # Find beta*uji by using vectorized operation in numpy
         buji = np.zeros((S,Ntot))
-        for i in range(len(Ntwiddle)):
-            buji[i] = 0.5*beta*k*(xji-Ntwiddle[i])**2
+        temp = 0.5*beta*k*(np.expand_dims(xji,axis=0) - np.expand_dims(Ntwiddle,axis=1))**2
+        buji[:-1,:] = temp
+        
+        
+        # Initialize fi0 according to mbar paper fk0 = 1/Nk*sum_n ln(exp(-beta*Uk))
+        fi0 = 1/Ni*logsumexp(-buji,axis=1)
 
         return buji,fi0
 
@@ -114,6 +114,7 @@ class Uwham:
             return lnwji,fi
         else:
             return None
+
  
     def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1):
         """
@@ -170,9 +171,9 @@ class Uwham:
             bins(int): number of bins 
 
         Returns:
-            1. bins_vec= binned vector from min to max (bins-1,)
-            2. p=the probability in each bin
-            3. F=The free energy in the binned vectors from min to max for all the simulations performed(S,bins-1)
+            1. bins_vec = binned vector from min to max (bins-1,)
+            2. F = The free energy in the binned vectors from min to max for all the simulations performed(S,bins-1)
+            3. logp = log of the probability in each bin
         """
         xji = self.xji
         if self.lnwji is None:
@@ -185,10 +186,14 @@ class Uwham:
         dl = bins_vec[1] - bins_vec[0]
         
         # find lnpji from all simulations (S,Ntot)
-        lnpji = self.get_lnpji()
+        lnpji_k = self.get_lnpji_k()
+
+        # log(sum(exp(lnpji)))
+        lnsum_ = logsumexp(lnpji_k,axis=1)
 
         # The log probability for each bin (S,bins-1)
         logp = np.zeros((S,bins-1))
+
         # Create the free energy matrix with the same shape
         F = np.zeros_like(logp)
 
@@ -197,7 +202,7 @@ class Uwham:
         indices = [np.argwhere(digitized == j) for j in range(1,bins)]
 
         for i in range(S):
-            logpi = np.array([logsumexp(lnpji[i][idx]) for idx in indices]) 
+            logpi = np.array([logsumexp(lnpji_k[i][idx]) for idx in indices]) - lnsum_[i] 
             logp[i] = logpi 
 
             Fi = np.log(dl)-logpi
@@ -206,12 +211,12 @@ class Uwham:
         
         return (bins_vec[:-1],F,logp)
 
-    def get_lnpji(self):
+    def get_lnpji_k(self):
         """
         Function that obtains all the weights for unbiased as well as biased simulations following the equation lnpji_k = fi-buji_k+lnwji where wji is the unbiased weights 
 
         Return:
-            lnpji(np.ndarray): log of the pji matrix with shape (S,Ntot)
+            lnpji_k(np.ndarray): log of the pji matrix with shape (S,Ntot)
         """
         if self.fi is None and self.wji is None:
             raise RuntimeError("Please run either self_consistent or Maximum_likelihood first")
@@ -223,9 +228,9 @@ class Uwham:
         S = buji.shape[0]
         Ntot = buji.shape[1]
 
-        lnpji = np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji+ np.repeat(lnwji[np.newaxis,:],S,axis=0)
+        lnpji_k = np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji+ np.repeat(lnwji[np.newaxis,:],S,axis=0)
 
-        return lnpji
+        return lnpji_k
     
 def Uwham_NLL_eq(fi,buji,Ni):
     """
