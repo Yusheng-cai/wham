@@ -52,7 +52,8 @@ class Uwham:
         
         
         # Initialize fi0 according to mbar paper fk0 = 1/Nk*sum_n ln(exp(-beta*Uk))
-        fi0 = 1/Ni*logsumexp(-buji,axis=1)
+        fi0 = 1/Ni*(-buji.sum(axis=1))
+        fi0 = fi0 - fi0[-1] 
 
         return buji,fi0
 
@@ -85,14 +86,18 @@ class Uwham:
         while not converged:
             lnwji = - logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0) 
             fi = - logsumexp(-buji + np.repeat(lnwji[np.newaxis,:],S,axis=0),axis=1)
+            fi = fi - fi[-1] #subtract the unbiased fi 
 
-            fi = fi - fi[-1] #subtract the unbiased fi
+            lnpjik = self.get_lnpji_k(lnwji,fi)
+            g = self.gradient(lnpjik,Ni)
+            gnorm = np.dot(g,g)
             
-            error = np.max(np.abs(fi-fi_prev)[:-1])/np.max(fi_prev[:-1])
+            error = np.max(np.abs(fi-fi_prev)[:-1])/np.max(np.abs(fi_prev[:-1]))
 
             if print_flag == True:
                 if iter_ % print_every == 0:
                     print("Error is {} at iteration {}".format(error,iter_))
+                    print("gradient norm is {} at iteration {}".format(gnorm,iter_)) 
 
             iter_ += 1
 
@@ -104,6 +109,7 @@ class Uwham:
                 converged = True
 
             fi_prev = fi
+            print(converged)
         
         if converged == True:
             lnwji = - logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0) 
@@ -186,7 +192,7 @@ class Uwham:
         dl = bins_vec[1] - bins_vec[0]
         
         # find lnpji from all simulations (S,Ntot)
-        lnpji_k = self.get_lnpji_k()
+        lnpji_k = self.get_lnpji_k(self.lnwji,self.fi)
 
         # log(sum(exp(lnpji)))
         lnsum_ = logsumexp(lnpji_k,axis=1)
@@ -211,19 +217,18 @@ class Uwham:
         
         return (bins_vec[:-1],F,logp)
 
-    def get_lnpji_k(self):
+    def get_lnpji_k(self,lnwji,fi):
         """
         Function that obtains all the weights for unbiased as well as biased simulations following the equation lnpji_k = fi-buji_k+lnwji where wji is the unbiased weights 
+
+        Args:
+            lnwji(np.ndarray): log of the unbiased weights (Ntot,)
+            fi(np.ndarray): -log(Zi/Z0) (S,)
 
         Return:
             lnpji_k(np.ndarray): log of the pji matrix with shape (S,Ntot)
         """
-        if self.fi is None and self.wji is None:
-            raise RuntimeError("Please run either self_consistent or Maximum_likelihood first")
-        
         buji = self.buji
-        fi = self.fi
-        lnwji = self.lnwji
         
         S = buji.shape[0]
         Ntot = buji.shape[1]
@@ -231,6 +236,25 @@ class Uwham:
         lnpji_k = np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji+ np.repeat(lnwji[np.newaxis,:],S,axis=0)
 
         return lnpji_k
+
+    def gradient(self,lnpjik,Ni):
+        """
+        Function that calculates the gradient of the Negative likelihood function. The function form is as follows
+            gk(f) = Nk - Nk*sum_n Wnk(f)
+        where Wnk=exp(fk)exp(-beta Uk(xn))wn
+        
+        Args:
+            lnpjik(np.ndarray): The log of the probability matrix shape(S,Ntot)
+            Ni(np.ndarray): The number of observations in each simulation (S,)
+
+        return:
+            The gradient of the negative likelihood function (S,)
+        """
+        Ntot = lnpjik.shape[1]
+
+        lnpk = logsumexp(lnpjik,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=1)
+
+        return Ni - np.exp(lnpk)
     
 def Uwham_NLL_eq(fi,buji,Ni):
     """
