@@ -71,7 +71,7 @@ class Uwham:
 
         return buji,fi0
 
-    def adaptive(self,maxiter=1e5,tol=1e-7,print_every=-1,gamma=1):
+    def adaptive(self,maxiter=1e5,tol=1e-7,print_every=-1,gamma=0.1):
         """
         performs adaptive optimization of binless Wham that alternates between self consistent iteration and Newton Raphson iteration according to the MBAR paper. The criteria for determining which one is use is based on the gradient norm outputted by the two methods where the method with the lower gradient will be used. 
 
@@ -94,44 +94,40 @@ class Uwham:
         iter_ = 1
         Ni = self.Ni
 
-        
-        fi = self.fi0
-        fnr = np.zeros_like(fi)
-        fsc = np.zeros_like(fi)
-        # Calculate lnwji at fi0
-        lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0)
-        lnpjik = self.get_lnpji_k(lnwji,fi)
-        g = self.gradient(lnpjik)
-        # set variable fi_prev for the initial iteration
-        fi_prev = fi
-        
         # set several flags
         print_flag = False if print_every == -1 else True
         nr_flag = False
         sc_flag = False
         converged = False
         
+ 
+        fi = self.fi0
+        fnr = np.zeros_like(fi)
+        nr_count = 0
+        fsc = np.zeros_like(fi)
+        sc_count = 0
+        # Calculate gradient at fi0
+        g,lnwji = self.gradient(fi,buji,Ni)
+        # set variable fi_prev for the initial iteration
+        fi_prev = fi
+        
         while not converged:
             # Calculate the Hessian at the current fi
-            H = self.Hessian(lnpjik)
+            H,_ = self.Hessian(fi,buji,Ni)
 
             # Newton Raphson update
             Hinvg = np.linalg.lstsq(H,g,rcond=-1)[0] #Calculates H-1g where xn+1 = xn H-1g
             Hinvg -= Hinvg[-1]
             fnr = fi - gamma*Hinvg
             fnr = fnr - fnr[-1] #subtract the unbiased fi, this is not necessary due to the opt done on Hinvg, kept for symmetry
-            lnwji_nr = -logsumexp(np.repeat(fnr[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0)
-            lnpjik_nr = self.get_lnpji_k(lnwji_nr,fnr)
-            g_nr = self.gradient(lnpjik_nr) #find gradient of Newton Raphson
+            g_nr,lnwji_nr = self.gradient(fnr,buji,Ni) #find gradient of Newton Raphson
             gnorm_nr = np.dot(g_nr.T,g_nr) #find the norm fo the gradient of Newton Raphson
 
  
             # Self consistent update
             fsc = - logsumexp(-buji + np.repeat(lnwji[np.newaxis,:],S,axis=0),axis=1)
             fsc = fsc - fsc[-1] #subtract the unbiased fi 
-            lnwji_sc = -logsumexp(np.repeat(fsc[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0)
-            lnpjik_sc = self.get_lnpji_k(lnwji_sc,fsc)
-            g_sc = self.gradient(lnpjik_sc) #find gradient of self_consistent
+            g_sc,lnwji_sc = self.gradient(fsc,buji,Ni) #find gradient of self_consistent
             gnorm_sc = np.dot(g_sc.T,g_sc)
             
             if gnorm_sc > gnorm_nr:
@@ -139,15 +135,15 @@ class Uwham:
                 nr_flag = True
                 sc_flag = False
                 lnwji = lnwji_nr
-                lnpjik = lnpjik_nr
                 g = g_nr
+                nr_count += 1
             else:
                 fi = fsc
                 nr_flag = False
                 sc_flag = True
                 lnwji = lnwji_sc
-                lnpjik = lnpjik_sc
                 g = g_sc
+                sc_count += 1
 
             error = np.max(np.abs(fi-fi_prev)[:-1])/np.max(np.abs(fi_prev[:-1]))
 
@@ -247,6 +243,7 @@ class Uwham:
             3. logp = log of the probability in each bin
         """
         xji = self.xji
+        buji = self.buji
         if self.lnwji is None:
             raise RuntimeError("Please run Maximum_likelihood or self_consistent first to obtain weights lnwji")
 
@@ -257,7 +254,7 @@ class Uwham:
         dl = bins_vec[1] - bins_vec[0]
         
         # find lnpji from all simulations (S,Ntot)
-        lnpji_k = self.get_lnpji_k(self.lnwji,self.fi)
+        lnpji_k = self.get_lnpjik(self.lnwji,buji,self.fi)
 
         # log(sum(exp(lnpji)))
         lnsum_ = logsumexp(lnpji_k,axis=1)
@@ -282,20 +279,20 @@ class Uwham:
         
         return (bins_vec[:-1],F,logp)
 
-    def get_lnpji_k(self,lnwji,fi):
+    def get_lnpjik(self,lnwji,buji,fi):
         """
         Function that obtains all the weights for unbiased as well as biased simulations following the equation lnpji_k = fi-buji_k+lnwji where wji is the unbiased weights 
 
         Args:
         ----
-            lnwji(np.ndarray): log of the unbiased weights (Ntot,)
-            fi(np.ndarray): -log(Zi/Z0) (S,)
+            lnwji(numpy.ndarray): log of the unbiased weights (Ntot,)
+            buji(numpy.ndarray): The energy matrix passed in shape (S,Ntot)
+            fi(numpy.ndarray): -log(Zi/Z0) (S,)
 
         Return:
         ------
             lnpji_k(np.ndarray): log of the pji matrix with shape (S,Ntot)
         """
-        buji = self.buji        
         S = buji.shape[0]
         Ntot = buji.shape[1]
 
@@ -303,27 +300,33 @@ class Uwham:
 
         return lnpjik
 
-    def gradient(self,lnpjik):
+    def gradient(self,fi,buji,Ni):
         """
         Function that calculates the gradient of the Negative likelihood function. The function form is as follows: gk(f) = Nk - Nk*sum_n Wnk(f) where Wnk=exp(fk)exp(-beta Uk(xn))wn 
 
         Args:
         ----
-            lnpjik(numpy.ndarray): Log of the weight matrix (S,Ntot)
+            fi(numpy.ndarray): fi=-log(Zi/Z0) passed in shape (S,)
+            buji(numpy.ndarray): Energy matrix equal to beta*Uji passed in shape (S,Ntot)
+            Ni(numpy.ndarray): Number of observations in each simulation passed in shape (S,)
 
         Return:
         ------
-            The gradient of the negative likelihood function (S,)
+            1. g = The gradient of the negative likelihood function (S,)
+            2. lnwji = Log of the unbiased weights
+
         """
-        Ntot = self.buji.shape[1]
-        Ni = self.Ni
+        Ntot = Ni.sum()
         
+        lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0)
+        lnpjik = self.get_lnpjik(lnwji,buji,fi)
+ 
         # Calculate the gradient of the NLL equation
         lnpk = logsumexp(lnpjik,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=1)
 
-        return Ni - np.exp(lnpk)
+        return 1/Ntot*(Ni - np.exp(lnpk)),lnwji
 
-    def Hessian(self,lnpjik):
+    def Hessian(self,fi,buji,Ni):
         """
         Calculates the Hessian matrix, the equation for Hessian matrix is as follows, the Hessian is as follows
         if i == k:
@@ -337,17 +340,22 @@ class Uwham:
 
         Return:
         ------
-            Hessian(numpy.ndarray): The Hessian matrix (S,S)
+            1. Hessian = The Hessian matrix (S,S)
+            2. lnwji = Log of the unbiased weights (S,Ntot)
         """
-        Ni = self.Ni
+        Ntot = Ni.sum()
 
         Nitensor = np.outer(Ni,Ni)
+
+        lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0)
+        lnpjik = self.get_lnpjik(lnwji,buji,fi)
+ 
         pjik = np.exp(lnpjik)
 
         H = Nitensor*pjik.dot(pjik.T)
         H -= np.diag(pjik.sum(axis=1)*Ni)
 
-        return H
+        return 1/Ntot*H,lnwji
     
 def Uwham_NLL_eq(fi,buji,Ni):
     """
