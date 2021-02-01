@@ -43,7 +43,7 @@ class Uwham:
         
     def initialize(self,initialization):
         """
-        initialize some parameters of the class 
+        initialize parameters for the class (Uji and fi0) 
 
         Return: 
             1. buji= beta*k*0.5*(n-nstar)**2 (S,Ntot)
@@ -73,22 +73,22 @@ class Uwham:
 
         return buji,fi0
 
-    def adaptive(self,maxiter=1e5,tol=1e-7,print_every=-1):
+    def adaptive(self,maxiter=1e5,tol=1e-7,print_every=-1,gamma=1):
         """
-        performs self-consistent iteration optimization of binless Wham 
+        performs adaptive optimization of binless Wham that alternates between self consistent iteration and Newton Raphson iteration according to the MBAR paper. The criteria for determining which one is use is based on the gradient norm outputted by the two methods where the method with the lower gradient will be used. 
 
         Args:
             maxiter(int): specifies the maximum number of self consistent iterations are allowed (default 1e5)
             tol(float): specifies the tolerance of the iteration, max|fn+1-fn|/max|fn| (default 1e-7)
             print_every(int): The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result.(default -1, so nothing will be printed) 
+            gamma(float): A float between 0 and 1 where the Newton Raphson update uses. xn+1=xn + gamma*Hinvg
 
         Return:
-            1. wji=the weights of all the observations in the simulation (Ntot,)
+            1. lnwji= log of the weights of all the observations in the simulation (Ntot,)
             2. fi=-ln(Zi/Z0) (S,)
         """
         # define variables
         buji = self.buji
-        gamma = 1
         fi = self.fi0
         fnr = np.zeros_like(fi)
         fsc = np.zeros_like(fi)
@@ -106,8 +106,6 @@ class Uwham:
         converged = False
 
         while not converged:
-            if iter_ > 1:
-                gamma = 1
             # Calculate lnwji at the current fi
             lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0)
             lnpjik = self.get_lnpji_k(lnwji,fi)
@@ -149,8 +147,8 @@ class Uwham:
             if print_flag == True:
                 if iter_ % print_every == 0:
                     print("Error is {} at iteration {}".format(error,iter_))
-                    print("gradient norm for Newton Raphson is {} at iteration {}".format(gnorm_nr,iter_)) 
-                    print("gradient norm for Self Consistent is {} at iteration {}".format(gnorm_sc,iter_))
+                    print("gradient norm for Newton Raphson is {%.4E} at iteration {}".format(gnorm_nr,iter_)) 
+                    print("gradient norm for Self Consistent is {%.4E} at iteration {}".format(gnorm_sc,iter_))
                     if nr_flag:
                         print("Newton Raphson is chosen for step {}".format(iter_))
                     if sc_flag:
@@ -299,7 +297,7 @@ class Uwham:
         where Wnk=exp(fk)exp(-beta Uk(xn))wn
         
         Args:
-            fi(numpy.ndarray): The log(-Zi/Z0) (S,)
+            lnpjik(numpy.ndarray): Log of the weight matrix (S,Ntot)
 
         return:
             The gradient of the negative likelihood function (S,)
@@ -322,7 +320,7 @@ class Uwham:
         
         Args:
         ----
-            fi(numpy.ndarray): The log(-Zi/Z0) (S,)
+            lnpjik(numpy.ndarray): Log of the weight matrix (S,Ntot)
 
         Return:
         ------
