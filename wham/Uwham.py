@@ -29,9 +29,8 @@ class Uwham:
         self.Ntwiddle = Ntwiddle
         self.Ni = Ni
 
-        Nt = Ni.sum()
         # The sum of Ni has to be Ntot, this is used for extra security
-        assert Ntot == Nt
+        assert Ntot == Ni.sum()
         # Length of Ntwiddle has to be 1 less than Ni
         assert len(Ntwiddle)+1 == len(Ni)
 
@@ -77,12 +76,14 @@ class Uwham:
         performs adaptive optimization of binless Wham that alternates between self consistent iteration and Newton Raphson iteration according to the MBAR paper. The criteria for determining which one is use is based on the gradient norm outputted by the two methods where the method with the lower gradient will be used. 
 
         Args:
+        -----
             maxiter(int): specifies the maximum number of self consistent iterations are allowed (default 1e5)
             tol(float): specifies the tolerance of the iteration, max|fn+1-fn|/max|fn| (default 1e-7)
             print_every(int): The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result.(default -1, so nothing will be printed) 
             gamma(float): A float between 0 and 1 where the Newton Raphson update uses. xn+1=xn + gamma*Hinvg
 
         Return:
+        ------
             1. lnwji= log of the weights of all the observations in the simulation (Ntot,)
             2. fi=-ln(Zi/Z0) (S,)
         """
@@ -187,6 +188,7 @@ class Uwham:
         Optimizes the negative likelihood equation of binless Wham using LBFGS algorithm as implemented by scipy.minimize, the derivatives of the MLE is found by automatic differentiation using autograd 
 
         Args:
+        -----
             ftol(float): the tolerance as set forth by scipy.minimize (default 2.22e-09)
 
             gtol(float): the tolerance as set forth by scipy.minimize (default 1e-05)  
@@ -198,6 +200,7 @@ class Uwham:
             iprint(int): the frequency at which the program outputs the result. Will not output if less than 0. (default -1)
 
         Return:
+        ------
             lnwji(np.ndarray): log of the optimal weights for each observation if converged else None
         """
         buji = self.buji
@@ -232,11 +235,13 @@ class Uwham:
         log of the weights lnwji
         
         Args:
+        ----
             min(float): the minimum of the binned vector (float/int)
             max(float): the maximum of the binned vector (float/int)
             bins(int): number of bins 
 
         Returns:
+        -------
             1. bins_vec = binned vector from min to max (bins-1,)
             2. F = The free energy in the binned vectors from min to max for all the simulations performed(S,bins-1)
             3. logp = log of the probability in each bin
@@ -282,10 +287,12 @@ class Uwham:
         Function that obtains all the weights for unbiased as well as biased simulations following the equation lnpji_k = fi-buji_k+lnwji where wji is the unbiased weights 
 
         Args:
+        ----
             lnwji(np.ndarray): log of the unbiased weights (Ntot,)
             fi(np.ndarray): -log(Zi/Z0) (S,)
 
         Return:
+        ------
             lnpji_k(np.ndarray): log of the pji matrix with shape (S,Ntot)
         """
         buji = self.buji        
@@ -301,7 +308,7 @@ class Uwham:
         Function that calculates the gradient of the Negative likelihood function. The function form is as follows: gk(f) = Nk - Nk*sum_n Wnk(f) where Wnk=exp(fk)exp(-beta Uk(xn))wn 
 
         Args:
-        -----
+        ----
             lnpjik(numpy.ndarray): Log of the weight matrix (S,Ntot)
 
         Return:
@@ -318,7 +325,6 @@ class Uwham:
 
     def Hessian(self,lnpjik):
         """
-        -----------
         Calculates the Hessian matrix, the equation for Hessian matrix is as follows, the Hessian is as follows
         if i == k:
             dgi/dfk = Ni**2*dot(Win.T,Win) - Ni*sum(Win,axis=1) --> sum over the observations
@@ -326,11 +332,11 @@ class Uwham:
             dgi/dfk = Ni*Nk*dot(Win.T,Wkn)
         
         Args:
-        -----
+        ----
             lnpjik(numpy.ndarray): Log of the weight matrix (S,Ntot)
 
         Return:
-        -------
+        ------
             Hessian(numpy.ndarray): The Hessian matrix (S,S)
         """
         Ni = self.Ni
@@ -345,12 +351,16 @@ class Uwham:
     
 def Uwham_NLL_eq(fi,buji,Ni):
     """
+    Negative likilihood equation for UNbinned wham 
+
     Args:
+    ----
         fi(np.ndarray): initial guess of the log of the partition coefficients Zk normalized by Z0 e.g. f1 = -ln(Z1/Z0) (shape (S,)) 
         buji(np.ndarray): beta*Wji energy matrix (shape(S,Ntot))
         Ni(np.ndarray): the count of observations in each simulation (shape(S,))
         
     Return:
+    ------
         Negative Log Likelihood value of Uwham
     """
     Ntot = buji.shape[1]
