@@ -24,8 +24,8 @@ def gather_data():
             N,Ntilde = read_dat(os.getcwd()+"/data/{}/time_samples.out".format(n))
             data_list.append(Ntilde)
 
-    Ni = np.ones((len(nlist)-1,))*1800
-    Ni = np.concatenate([Ni,np.array([1500])])
+    Ni = np.ones((len(nlist)-1,))*1801
+    Ni = np.concatenate([Ni,np.array([1501])])
     xji = np.concatenate(data_list)
     
     return xji,Ni,Ntwiddle,beta,k
@@ -41,6 +41,8 @@ def correct_data():
 
 def test_u_nll():
     xji,Ni,Ntwiddle,beta,k = gather_data()
+    print(Ni.sum())
+    print(len(xji))
     correct = correct_data()
     
     u = Uwham(xji,k,Ntwiddle,Ni,beta=beta)
@@ -60,8 +62,8 @@ def test_u():
     xji,Ni,Ntwiddle,beta,k = gather_data()
     correct = correct_data()
     
-    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta)
-    a,b = u.self_consistent(tol=1e-8)
+    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta,initialization='zeros')
+    a,b = u.adaptive(tol=1e-8,print_every=1)
     ubins,F,f = u.compute_betaF_profile(0,35,bins=36)
     print("Free energy of binless self consistent is ",F[-1])
     NLL = Uwham_NLL_eq(b,u.buji,Ni)
@@ -83,7 +85,7 @@ if __name__ == '__main__':
     ax = fig.add_subplot(111)
     ax.plot(ubins_nll,F_nll,'r',label="Negative likelihood")
     ax.plot(ubins,correct,label='Sean reference')
-    ax.plot(ubins,F,'b--',label='Self iterative result')
+    ax.plot(ubins,F,'b--',label='Adapative result')
     ax.set_xlabel(r"$\tilde{N}$")
     ax.set_ylabel(r"$\beta F$")
     ax.legend(fontsize=15)
