@@ -63,7 +63,7 @@ def test_u():
     correct = correct_data()
     
     u = Uwham(xji,k,Ntwiddle,Ni,beta=beta,initialization='zeros')
-    a,b = u.adaptive(tol=1e-8,print_every=1)
+    a,b = u.adaptive(tol=1e-8,print_every=1,gamma=1)
     ubins,F,f = u.compute_betaF_profile(0,35,bins=36)
     print("Free energy of binless self consistent is ",F[-1])
     NLL = Uwham_NLL_eq(b,u.buji,Ni)
