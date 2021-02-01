@@ -27,12 +27,11 @@ class Uwham:
         self.k = k
         self.beta = beta
         self.Ntwiddle = Ntwiddle
-
         self.Ni = Ni
+
         Nt = Ni.sum()
         # The sum of Ni has to be Ntot, this is used for extra security
         assert Ntot == Nt
-
         # Length of Ntwiddle has to be 1 less than Ni
         assert len(Ntwiddle)+1 == len(Ni)
 
@@ -89,29 +88,30 @@ class Uwham:
         """
         # define variables
         buji = self.buji
-        fi = self.fi0
-        fnr = np.zeros_like(fi)
-        fsc = np.zeros_like(fi)
-
-        Ni = self.Ni
-
         S = buji.shape[0] # number of simulations
         Ntot = buji.shape[1] # total number of observations 
         iter_ = 1
-        fi_prev = fi
+        Ni = self.Ni
 
+        
+        fi = self.fi0
+        fnr = np.zeros_like(fi)
+        fsc = np.zeros_like(fi)
+        # Calculate lnwji at fi0
+        lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0)
+        lnpjik = self.get_lnpji_k(lnwji,fi)
+        g = self.gradient(lnpjik)
+        # set variable fi_prev for the initial iteration
+        fi_prev = fi
+        
+        # set several flags
         print_flag = False if print_every == -1 else True
         nr_flag = False
         sc_flag = False
         converged = False
-
+        
         while not converged:
-            # Calculate lnwji at the current fi
-            lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0)
-            lnpjik = self.get_lnpji_k(lnwji,fi)
-
-            # Calculate the Hessian and Gradient at the current fi
-            g = self.gradient(lnpjik)
+            # Calculate the Hessian at the current fi
             H = self.Hessian(lnpjik)
 
             # Newton Raphson update
@@ -137,18 +137,24 @@ class Uwham:
                 fi = fnr
                 nr_flag = True
                 sc_flag = False
+                lnwji = lnwji_nr
+                lnpjik = lnpjik_nr
+                g = g_nr
             else:
                 fi = fsc
                 nr_flag = False
                 sc_flag = True
+                lnwji = lnwji_sc
+                lnpjik = lnpjik_sc
+                g = g_sc
 
             error = np.max(np.abs(fi-fi_prev)[:-1])/np.max(np.abs(fi_prev[:-1]))
 
             if print_flag == True:
                 if iter_ % print_every == 0:
                     print("Error is {} at iteration {}".format(error,iter_))
-                    print("gradient norm for Newton Raphson is {%.4E} at iteration {}".format(gnorm_nr,iter_)) 
-                    print("gradient norm for Self Consistent is {%.4E} at iteration {}".format(gnorm_sc,iter_))
+                    print("gradient norm for Newton Raphson is {0:.4E} at iteration {1}".format(gnorm_nr,iter_)) 
+                    print("gradient norm for Self Consistent is {0:.4E} at iteration {1}".format(gnorm_sc,iter_))
                     if nr_flag:
                         print("Newton Raphson is chosen for step {}".format(iter_))
                     if sc_flag:
@@ -292,14 +298,14 @@ class Uwham:
 
     def gradient(self,lnpjik):
         """
-        Function that calculates the gradient of the Negative likelihood function. The function form is as follows
-            gk(f) = Nk - Nk*sum_n Wnk(f)
-        where Wnk=exp(fk)exp(-beta Uk(xn))wn
-        
+        Function that calculates the gradient of the Negative likelihood function. The function form is as follows: gk(f) = Nk - Nk*sum_n Wnk(f) where Wnk=exp(fk)exp(-beta Uk(xn))wn 
+
         Args:
+        -----
             lnpjik(numpy.ndarray): Log of the weight matrix (S,Ntot)
 
-        return:
+        Return:
+        ------
             The gradient of the negative likelihood function (S,)
         """
         Ntot = self.buji.shape[1]
@@ -312,18 +318,19 @@ class Uwham:
 
     def Hessian(self,lnpjik):
         """
+        -----------
         Calculates the Hessian matrix, the equation for Hessian matrix is as follows, the Hessian is as follows
-            if i == k:
-                dgi/dfk = Ni**2*dot(Win.T,Win) - Ni*sum(Win,axis=1) --> sum over the observations
-            if i != k:
-                dgi/dfk = Ni*Nk*dot(Win.T,Wkn)
+        if i == k:
+            dgi/dfk = Ni**2*dot(Win.T,Win) - Ni*sum(Win,axis=1) --> sum over the observations
+        if i != k:
+            dgi/dfk = Ni*Nk*dot(Win.T,Wkn)
         
         Args:
-        ----
+        -----
             lnpjik(numpy.ndarray): Log of the weight matrix (S,Ntot)
 
         Return:
-        ------
+        -------
             Hessian(numpy.ndarray): The Hessian matrix (S,S)
         """
         Ni = self.Ni
