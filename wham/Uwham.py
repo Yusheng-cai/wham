@@ -178,7 +178,77 @@ class Uwham:
         else:
             return None
 
- 
+    
+    def Newton_Raphson(self,maxiter=250,tol=1e-7,alpha=0.25,beta=0.5,print_every=-1):
+        """
+        Function that employs pure Newton Raphson iteration with line search 
+        
+        Args:
+        ----
+            maxsearch(float): The maximum number performed over for the bisection line search 
+            maxiter(int): Maximum number of iterations allowed (default 250)
+            tol(float): The tolerance for convergence (default 1e-7)
+            print_every(int): The frequency at which the program outputs. If -1, then program won't output anything. (default -1)
+
+        Return:
+        ------
+            Optimal set of fi and lnwji
+        """
+        fi = self.fi0
+        fi_prev = fi
+        buji = self.buji
+        Ni = self.Ni
+        iter_ = 0
+
+        while True:
+            # Find current value of the function
+            func = Uwham_NLL_eq(fi,buji,Ni)
+
+            # Find gradient of the function
+            g,_ = self.gradient(fi,buji,Ni)
+
+            # Find Hessian of the function
+            H,_ = self.Hessian(fi,buji,Ni)
+                
+            # Find v where v is the search position, v=H-1g 
+            v = -np.linalg.lstsq(H,g,rcond=-1)[0]
+            
+            # Find the local gradient on alpha del f(x + t*v) >= f(x) + alpha*t*del f(x).v, we call del f(x).v -> m 
+            t = 1
+            m = g.dot(v)
+
+            while True:
+                temp = fi + t*v
+                # Find the updated value of the function 
+                func_updated = Uwham_NLL_eq(temp,buji,Ni)
+
+                # Find the threshold
+                threshold = alpha*t*m
+                print("curr val:{}, updated val:{}, threshold:{}".format(func,func_updated,threshold))
+                
+                # Performing backtracking algorithm
+                if func_updated - func >= threshold:
+                    t = beta*t
+                else:
+                    fi = fi + t*v
+                    fi = fi - fi[-1]
+                    break
+
+            
+            error = np.max(abs(fi - fi_prev)[:-1])/np.max(abs(fi_prev)[:-1])
+            iter_ += 1
+            
+            if iter_ % print_every == 0:
+                print("At iteration {}, the error is {}".format(iter_,error))
+            
+            if error <= tol:
+                print("The Newton Raphson iteration has converged in {} steps".format(iter_))
+                break
+
+            fi_prev = fi
+
+        return fi
+
     def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1):
         """
         Optimizes the negative likelihood equation of binless Wham using LBFGS algorithm as implemented by scipy.minimize, the derivatives of the MLE is found by automatic differentiation using autograd 
@@ -355,7 +425,7 @@ class Uwham:
         H = Nitensor*pjik.dot(pjik.T)
         H -= np.diag(pjik.sum(axis=1)*Ni)
 
-        return 1/Ntot*H,lnwji
+        return 1/Ntot*(H),lnwji
     
 def Uwham_NLL_eq(fi,buji,Ni):
     """
