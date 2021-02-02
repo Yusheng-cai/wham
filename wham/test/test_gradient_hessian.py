@@ -34,6 +34,7 @@ def gather_data():
 def test_jacobian():
     U = gather_data()
     j = jacobian(Uwham_NLL_eq)
+    Ni = U.Ni
 
     fi0 = U.fi0
     autograd_result = j(fi0,U.buji,U.Ni)
@@ -45,6 +46,7 @@ def test_jacobian():
 def test_hessian():
     U = gather_data()
     h = hessian(Uwham_NLL_eq)
+    Ni = U.Ni
 
     fi0 = U.fi0
     autograd_result = h(fi0,U.buji,U.Ni)
