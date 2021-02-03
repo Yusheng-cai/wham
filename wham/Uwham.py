@@ -179,25 +179,28 @@ class Uwham:
             return None
 
     
-    def Newton_Raphson(self,maxiter=250,tol=1e-7,alpha=0.25,beta=0.5,print_every=-1):
+    def Newton_Raphson(self,maxiter=250,tol=1e-7,alpha=0.5,beta=0.5,print_every=-1):
         """
-        Function that employs pure Newton Raphson iteration with line search 
+        Function that employs pure Newton Raphson iteration with back-tracking line search, following https://www.stat.cmu.edu/~ryantibs/convexopt-S15/lectures/14-newton.pdf at slide #11 
         
         Args:
         ----
             maxsearch(float): The maximum number performed over for the bisection line search 
             maxiter(int): Maximum number of iterations allowed (default 250)
             tol(float): The tolerance for convergence (default 1e-7)
+            alpha(float): The alpha parameter in backtracking line search (default 0.25)
+            beta(float): The beta parameter in backtracking line search (default 0.5)
             print_every(int): The frequency at which the program outputs. If -1, then program won't output anything. (default -1)
 
         Return:
         ------
-            Optimal set of fi and lnwji
+            Optimal set of lnwji and fi
         """
         fi = self.fi0
         fi_prev = fi
         buji = self.buji
         Ni = self.Ni
+        Ntot = Ni.sum()
         iter_ = 0
 
         while True:
@@ -213,21 +216,29 @@ class Uwham:
             # Find v where v is the search position, v=H-1g 
             v = -np.linalg.lstsq(H,g,rcond=-1)[0]
             
-            # Find the local gradient on alpha del f(x + t*v) >= f(x) + alpha*t*del f(x).v, we call del f(x).v -> m 
+            # Find the local gradient on alpha del f(x + t*v) <= f(x) + alpha*t*del f(x).v, we call del f(x).v -> m 
             t = 1
+
             m = g.dot(v)
+            criteria = (v.T).dot(H).dot(v)
+
+            if criteria <= tol:
+                fi = fi + t*v
+                fi -= fi[-1]
+                print("optimization has converged in {} iterations.".format(iter_))
+                lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0) 
+                break
 
             while True:
-                temp = fi + t*v
                 # Find the updated value of the function 
-                func_updated = Uwham_NLL_eq(temp,buji,Ni)
+                func_updated = Uwham_NLL_eq(fi + t*v,buji,Ni)
 
                 # Find the threshold
-                threshold = alpha*t*m
+                threshold = t*m
                 print("curr val:{}, updated val:{}, threshold:{}".format(func,func_updated,threshold))
                 
                 # Performing backtracking algorithm
-                if func_updated - func >= threshold:
+                if (func_updated - func)/alpha >= threshold:
                     t = beta*t
                 else:
                     fi = fi + t*v
@@ -239,15 +250,13 @@ class Uwham:
             iter_ += 1
             
             if iter_ % print_every == 0:
-                print("At iteration {}, the error is {}".format(iter_,error))
-            
-            if error <= tol:
-                print("The Newton Raphson iteration has converged in {} steps".format(iter_))
-                break
-
+                print("At iteration {}, the error is {}".format(iter_,error)) 
             fi_prev = fi
 
-        return fi
+        self.fi = fi
+        self.lnwji = lnwji
+
+        return lnwji,fi
 
     def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1):
         """
@@ -394,7 +403,7 @@ class Uwham:
         # Calculate the gradient of the NLL equation
         lnpk = logsumexp(lnpjik,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=1)
 
-        return 1/Ntot*(Ni - np.exp(lnpk)),lnwji
+        return -1/Ntot*(Ni - np.exp(lnpk)),lnwji
 
     def Hessian(self,fi,buji,Ni):
         """
@@ -425,7 +434,27 @@ class Uwham:
         H = Nitensor*pjik.dot(pjik.T)
         H -= np.diag(pjik.sum(axis=1)*Ni)
 
-        return 1/Ntot*(H),lnwji
+        return -1/Ntot*(H),lnwji
+
+    def check_posdef(self,mat):
+        """
+        Function that checks whether a matrix is positive definite(whether all the eigenvalues are larger than 0)
+
+        Args:
+        ----
+            mat(numpy.ndarray): The matrix to be checked
+
+        Return:
+            True or False based on whether the matrix is positive definite 
+        """
+        if np.array_equal(mat,mat.T):
+            try:
+                np.linalg.cholesky(mat)
+                return True
+            except np.linalg.LinAlgError:
+                return False
+        else:
+            return False
     
 def Uwham_NLL_eq(fi,buji,Ni):
     """
