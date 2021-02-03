@@ -39,7 +39,7 @@ def correct_data():
 
     return lines
 
-def test_u_nll():
+def test_lbfgs():
     xji,Ni,Ntwiddle,beta,k = gather_data()
     print(Ni.sum())
     print(len(xji))
@@ -58,7 +58,7 @@ def test_u_nll():
     assert np.linalg.norm(F - correct,2)/len(F) < 0.05 
     return ubins,F
 
-def test_u():
+def test_adaptive():
     xji,Ni,Ntwiddle,beta,k = gather_data()
     correct = correct_data()
     
@@ -76,9 +76,30 @@ def test_u():
 
     return ubins,F
 
+def test_NR():
+    xji,Ni,Ntwiddle,beta,k = gather_data()
+    correct = correct_data()
+    
+    u = Uwham(xji,k,Ntwiddle,Ni,beta=beta,initialization='zeros')
+    a,b = u.Newton_Raphson(tol=1e-8,print_every=1)
+    ubins,F,f = u.compute_betaF_profile(0,35,bins=36)
+    print("Free energy of binless self consistent is ",F[-1])
+    NLL = Uwham_NLL_eq(b,u.buji,Ni)
+
+    F = F[-1]
+    print("self consistent error with reference is:{}".format(np.linalg.norm(F - correct,2)/len(F))) 
+    print("self consistent NLL is {}".format(NLL))
+
+    assert np.linalg.norm(F - correct,2)/len(F) < 0.05  
+
+
+
+    return ubins,F
+
 if __name__ == '__main__':
-    ubins_nll,F_nll = test_u_nll()
-    ubins,F = test_u()
+    ubins_nll,F_nll = test_lbfgs()
+    ubins,F = test_adaptive()
+    ubins_NR,F_NR = test_NR()
     correct = correct_data()
     
     fig = plt.figure()
@@ -86,6 +107,7 @@ if __name__ == '__main__':
     ax.plot(ubins_nll,F_nll,'r',label="Negative likelihood")
     ax.plot(ubins,correct,label='Sean reference')
     ax.plot(ubins,F,'b--',label='Adapative result')
+    ax.plot(ubins_NR,F_NR,'y--',label='Newton Raphson')
     ax.set_xlabel(r"$\tilde{N}$")
     ax.set_ylabel(r"$\beta F$")
     ax.legend(fontsize=15)

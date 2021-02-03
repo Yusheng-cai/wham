@@ -41,7 +41,7 @@ def test_jacobian():
     my_result,_ = U.gradient(fi0,U.buji,U.Ni)
     
     # gradient from autograd gives negative of my result
-    assert np.allclose(-autograd_result,my_result)
+    assert np.allclose(autograd_result,my_result)
 
 def test_hessian():
     U = gather_data()
@@ -53,5 +53,5 @@ def test_hessian():
     my_result,_ = U.Hessian(fi0,U.buji,U.Ni)
     
     # hessian from autograd gives negative of my result
-    assert np.allclose(-autograd_result,my_result)
+    assert np.allclose(autograd_result,my_result)
 
