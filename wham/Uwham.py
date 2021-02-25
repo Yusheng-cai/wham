@@ -31,6 +31,7 @@ class Uwham:
 
         # The sum of Ni has to be Ntot, this is used for extra security
         assert Ntot == Ni.sum()
+
         # Length of Ntwiddle has to be 1 less than Ni
         assert len(Ntwiddle)+1 == len(Ni)
 
@@ -250,7 +251,7 @@ class Uwham:
             iter_ += 1
             
             if iter_ % print_every == 0:
-                print("At iteration {}, the error is {}".format(iter_,error)) 
+                print("At iteration {}, the error is {}".format(iter_,criteria)) 
             fi_prev = fi
 
         self.fi = fi
@@ -415,7 +416,10 @@ class Uwham:
         
         Args:
         ----
-            lnpjik(numpy.ndarray): Log of the weight matrix (S,Ntot)
+            fi(numpy.ndarray): fi=-log(Zi/Z0), the weights of each of the system (S,)
+            buji(numpy.ndarray): biased energy in each of the biased simulation (S,Ntot)
+            Ni(numpy.ndarray): The number of observations from each of the simulations (S,)
+
 
         Return:
         ------
