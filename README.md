@@ -21,5 +21,19 @@ from wham.Uwham import *
 Uwham = wham()
 ```
 
+## Test
+
+In wham/test/ folder run the following command 
+
+```bash
+pytest 
+```
+
+Comparison to other codes
+![Comparison](/wham/test/Binlesstest.png)
+
+
+
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
