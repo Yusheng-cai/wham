@@ -10,9 +10,9 @@ class Uwham:
     A class that performs the binless Wham calculations or Mbar
 
     Args:
-        xji(np.ndarray): all the observations inclduing biased and unbiased simulations (Ntot,)
-        k(float): the parameter in harmonic potential where U(x)=0.5*k*(x-xstar)**2
-        Ntwiddle(np.ndarray): The Ntwiddle of all the biased simulations (S-1,)
+        xji(np.ndarray): all the observations inclduing biased and unbiased simulations (Ntot,n)
+        k(float or np.ndarray): the parameter in harmonic potential where U(x)=0.5*k*(x-xstar)**2 array of shape (S,n)
+        Ntwiddle(np.ndarray): The Ntwiddle of all the biased simulations of shape (S,n)
         Ni(np.ndarray): Number of observations in each simulations (S,)
         beta(float): 1/kbT, the default is at T=298K
         buji(np.ndarray): The energy matrix, is zero for unbiased simulation (S,Ntot)
@@ -22,24 +22,25 @@ class Uwham:
 
     def __init__(self,xji,k,Ntwiddle,Ni,beta=0.4036,initialization='zeros'):
         self.xji = xji
-        Ntot = xji.shape[0]
-
-        self.k = k
+        self.k = k 
         self.beta = beta
-        self.Ntwiddle = Ntwiddle
-        self.Ni = Ni
+        self.lnwji = None
+        self.fi = None
+        self.Ntwiddle = np.array(Ntwiddle)
+        self.Ni = np.array(Ni)
+        
+        # The total observations Ntot
+        Ntot = xji.shape[0] 
+
+        # Length of Ntwiddle has to be 1 less than Ni
+        assert len(Ntwiddle) == len(Ni)
 
         # The sum of Ni has to be Ntot, this is used for extra security
         assert Ntot == Ni.sum()
 
-        # Length of Ntwiddle has to be 1 less than Ni
-        assert len(Ntwiddle)+1 == len(Ni)
-
         self.buji,self.fi0 = self.initialize(initialization)
-
-        self.lnwji = None
-        self.fi = None
         
+
     def initialize(self,initialization):
         """
         initialize parameters for the class (Uji and fi0) 
@@ -51,15 +52,15 @@ class Uwham:
         Ntwiddle = self.Ntwiddle
         beta = self.beta
         k = self.k
+        
+        # xji is of shape (Ntot,n), Ni is shape (S,)
         xji = self.xji
         Ni = self.Ni
         S,Ntot = Ni.shape[0],xji.shape[0]
         
-        # Find beta*uji by using vectorized operation in numpy
-        buji = np.zeros((S,Ntot))
-        temp = 0.5*beta*k*(np.expand_dims(xji,axis=0) - np.expand_dims(Ntwiddle,axis=1))**2
-        buji[:-1,:] = temp
-        
+        # xji:(Ntot,n) -> (S,n,Ntot), Ntwiddle(S,n) -> (S,n,Ntot) --> (S,n,Ntot)
+        squared = (np.repeat(np.expand_dims(xji.T,axis=0),S,axis=0) - np.repeat(np.expand_dims(Ntwiddle,axis=-1),Ntot,axis=-1))**2
+        buji = 0.5*beta*(np.repeat(np.expand_dims(k,axis=-1),Ntot,axis=-1)*squared).sum(axis=1) # shape (S,Ntot)
         
         # Initialize fi0 according to mbar paper fk0 = 1/Nk*sum_n ln(exp(-beta*Uk))
         if initialization == 'mbar':
@@ -259,7 +260,7 @@ class Uwham:
 
         return lnwji,fi
 
-    def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1):
+    def Maximum_likelihood(self,ftol=2.22e-09,gtol=1e-05,maxiter=15000,maxfun=15000,disp=None,iprint=-1,index=-1):
         """
         Optimizes the negative likelihood equation of binless Wham using LBFGS algorithm as implemented by scipy.minimize, the derivatives of the MLE is found by automatic differentiation using autograd 
 
@@ -290,7 +291,7 @@ class Uwham:
             print("Optimization has converged")
 
             fi = result.x # shape (S,)
-            fi = fi - fi[-1]
+            fi = fi - fi[index]
 
             lnwji = -logsumexp(np.repeat(fi[:,np.newaxis],Ntot,axis=1)-buji,b=np.repeat(Ni[:,np.newaxis],Ntot,axis=1),axis=0) #shape (Ntot,)
 
@@ -318,7 +319,7 @@ class Uwham:
             2. F = The free energy in the binned vectors from min to max for all the simulations performed(S,bins-1)
             3. logp = log of the probability in each bin
         """
-        xji = self.xji
+        xji = self.xji.squeeze(-1)
         buji = self.buji
         if self.lnwji is None:
             raise RuntimeError("Please run Maximum_likelihood or self_consistent first to obtain weights lnwji")
