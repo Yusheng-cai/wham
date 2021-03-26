@@ -12,6 +12,7 @@ def read_dat(file_path):
     """
     f = open(file_path)
     lines = f.readlines()
+    lines = [line for line in lines if line[0]!="#"]
 
     lines = [[float(num) for num in line.rstrip("\n").split()] for line in lines if line[0]!="#"]
     lines = np.array(lines)
@@ -19,7 +20,7 @@ def read_dat(file_path):
     N = lines[:,1]
     Ntilde = lines[:,2]
 
-    return (N,Ntilde)
+    return (N,Ntilde,lines)
 
 def make_bins(data,min,max,bins=101):
     """
