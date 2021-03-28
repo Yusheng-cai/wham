@@ -16,10 +16,10 @@ def gather_data():
 
     for n in nlist:
         if n != "unbiased":
-            N,Ntilde = read_dat(os.getcwd()+"/data/nstar_{}/plumed.out".format(n))
+            N,Ntilde,_ = read_dat(os.getcwd()+"/data/nstar_{}/plumed.out".format(n))
             data_list.append(Ntilde[200:])
         else:
-            N,Ntilde = read_dat(os.getcwd()+"/data/{}/time_samples.out".format(n))
+            N,Ntilde,_ = read_dat(os.getcwd()+"/data/{}/time_samples.out".format(n))
             data_list.append(Ntilde)
 
     Ni = np.ones((len(nlist)-1,))*1800
