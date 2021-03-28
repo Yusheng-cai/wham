@@ -17,8 +17,23 @@ python setup.py install
 
 ```python
 from wham.Uwham import *
+import numpy as np
 
-Uwham = wham()
+Ntwiddle = np.array([-5,0,5,10,15,20,25,0]) #Where 0 just means unbiased
+k = np.ones((len(Ntwiddle),1))*0.98
+k[-1] = 0 #last one is unbiased
+Ni = np.ones((len(Ntwiddle),1))*1500
+
+# Do some operation to load xji
+xji = load_data()
+
+# instantiate Uwham
+U = Uwham(xji,k,Ntwiddle,Ni)
+
+# get lnwji using either of the three methods
+lnwji,fi = U.adaptive()
+lnwji,fi = U.Newton_Raphson()
+lnwji,fi = U.Maximum_likelihood()
 ```
 
 ## Test
