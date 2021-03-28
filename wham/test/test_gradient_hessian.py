@@ -30,8 +30,6 @@ def gather_data():
     U = Uwham(xji,k,Ntwiddle,Ni,beta)
     return U
     
-
-
 def test_jacobian():
     U = gather_data()
     j = jacobian(Uwham_NLL_eq)
@@ -39,7 +37,7 @@ def test_jacobian():
 
     fi0 = U.fi0
     autograd_result = j(fi0,U.buji,Ni)
-    my_result,_ = U.gradient(fi0,U.buji,U.Ni)
+    my_result,_ = Uwham.gradient(fi0,U.buji,U.Ni)
     
     # gradient from autograd gives negative of my result
     assert np.allclose(autograd_result,my_result)
@@ -51,7 +49,7 @@ def test_hessian():
 
     fi0 = U.fi0
     autograd_result = h(fi0,U.buji,Ni)
-    my_result,_ = U.Hessian(fi0,U.buji,Ni)
+    my_result,_ = Uwham.Hessian(fi0,U.buji,Ni)
     
     # hessian from autograd gives negative of my result
     assert np.allclose(autograd_result,my_result)
