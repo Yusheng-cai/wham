@@ -11,7 +11,7 @@ class Uwham:
 
     Args:
         xji(np.ndarray): all the observations inclduing biased and unbiased simulations (Ntot,n)
-        k(float or np.ndarray): the parameter in harmonic potential where U(x)=0.5*k*(x-xstar)**2 array of shape (S,n)
+        k(np.ndarray): the parameter in harmonic potential where U(x)=0.5*k*(x-xstar)**2 array of shape (S,n)
         Ntwiddle(np.ndarray): The Ntwiddle of all the biased simulations of shape (S,n)
         Ni(np.ndarray): Number of observations in each simulations (S,)
         beta(float): 1/kbT, the default is at T=298K
@@ -40,7 +40,6 @@ class Uwham:
 
         self.buji,self.fi0 = self.initialize(initialization)
         
-
     def initialize(self,initialization):
         """
         initialize parameters for the class (Uji and fi0) 
@@ -79,11 +78,8 @@ class Uwham:
 
         Args:
             maxiter(int): specifies the maximum number of self consistent iterations are allowed (default 1e5)
-
             tol(float): specifies the tolerance of the iteration, max|fn+1-fn|/max|fn| (default 1e-7)
-
             print_every(int): The frequency at which the programs outputs the result. If the number is less than zero, the program will not output result.(default -1, so nothing will be printed) 
-
             gamma(float): A float between 0 and 1 where the Newton Raphson update uses. xn+1=xn + gamma*Hinvg
 
         Return:
@@ -120,13 +116,12 @@ class Uwham:
             H,_ = self.Hessian(fi,buji,Ni)
 
             # Newton Raphson update
-            Hinvg = np.linalg.lstsq(H,g,rcond=-1)[0] #Calculates H-1g where xn+1 = xn H-1g
-            Hinvg -= Hinvg[-1]
+            Hinvg = np.linalg.lstsq(H,g,rcond=-1)[0] #Calculates H-1g where xn+1 = xn + H-1g
+
             fnr = fi - gamma*Hinvg
             fnr = fnr - fnr[-1] #subtract the unbiased fi, this is not necessary due to the opt done on Hinvg, kept for symmetry
             g_nr,lnwji_nr = self.gradient(fnr,buji,Ni) #find gradient of Newton Raphson
             gnorm_nr = np.dot(g_nr.T,g_nr) #find the norm fo the gradient of Newton Raphson
-
  
             # Self consistent update
             fsc = - logsumexp(-buji + np.repeat(lnwji[np.newaxis,:],S,axis=0),axis=1)
@@ -196,7 +191,8 @@ class Uwham:
             print_every(int): The frequency at which the program outputs. If -1, then program won't output anything. (default -1)
 
         Return:
-            Optimal set of lnwji and fi
+            1. lnwji= log of the weights of all the observations in the simulation (Ntot,)
+            2. fi=-ln(Zi/Z0) (S,)
         """
         fi = self.fi0
         fi_prev = fi
@@ -246,8 +242,7 @@ class Uwham:
                     fi = fi + t*v
                     fi = fi - fi[-1]
                     break
-
-            
+ 
             error = np.max(abs(fi - fi_prev)[:-1])/np.max(abs(fi_prev)[:-1])
             iter_ += 1
             
@@ -266,17 +261,14 @@ class Uwham:
 
         Args:
             ftol(float): the tolerance as set forth by scipy.minimize (default 2.22e-09)
-
             gtol(float): the tolerance as set forth by scipy.minimize (default 1e-05)  
-
             maxiter(int): the maximum number of iterations as set forth by scipy.minimize. (default 15000)
-
             maxfun(int): the maximum number of function evaluations as set forth by scipy.minimize. (default 15000)
-
             iprint(int): the frequency at which the program outputs the result. Will not output if less than 0. (default -1)
 
         Return:
-            lnwji(np.ndarray): log of the optimal weights for each observation if converged else None
+            1. lnwji= log of the weights of all the observations in the simulation (Ntot,)
+            2. fi=-ln(Zi/Z0) (S,)
         """
         buji = self.buji
         fi0 = self.fi0
@@ -462,6 +454,7 @@ def Uwham_NLL_eq(fi,buji,Ni):
     fi = fi - fi[-1]
     first_term = 1/Ntot*nup.sum(alogsumexp(nup.repeat(fi[:,nup.newaxis],Ntot,axis=1)-buji,\
                                                 b=np.repeat(Ni[:,np.newaxis]/Ntot,Ntot,axis=1),axis=0))
+
 
     second_term = -nup.sum(Ni*fi)/Ntot
 
