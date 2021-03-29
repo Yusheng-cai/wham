@@ -323,7 +323,7 @@ class Uwham:
         dl = bins_vec[1] - bins_vec[0]
         
         # find lnpji from all simulations (S,Ntot)
-        lnpji_k = self.get_lnpjik(self.lnwji,buji,self.fi)
+        lnpji_k = Uwham.get_lnpjik(self.lnwji,buji,self.fi)
 
         # log(sum(exp(lnpji)))
         lnsum_ = logsumexp(lnpji_k,axis=1)
