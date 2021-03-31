@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import integrate
 
 def read_dat(file_path):
     """
@@ -89,3 +90,30 @@ def cov_fi(wji,Ni):
 
 
     return cov
+
+def ss_umbrella(qstar,qavg,qvar,kappa):
+    """
+    Sparse sampling performed for umbrella potentials k/2(q-q*)^2 
+
+    Args:
+        qstar(numpy.ndarray): A numpy array of the q* where q is the order parameter
+        qavg(numpy.ndarray): A numpy array of the mean values at every simulation <q> where q is the Order Parameter
+        qvar(numpy.ndarray): A numpy array of the variance values at every simulation <(q-<q>)^2>
+        kappa(float): The kappa parameter in the potential
+
+    Returns:
+        F(numpy.ndarray): The unbiased free energy calculated from sparse sampling
+    """
+    FvkN = np.log(2*np.pi*qvar)
+
+    integrand=kappa*(qstar - qavg)
+    FkN = np.zeros((len(integrand),))
+    for i in range(2,len(integrand)+1):
+        FkN[i-1] = integrate.simps(integrand[:i],qstar[:i])
+
+    UkN = kappa/2*(qstar-qavg)**2
+
+    F = FvkN - UkN + FkN
+    F = F - F.min()
+    return (FvkN,FkN,UkN),F
+        
