@@ -180,6 +180,7 @@ class Uwham:
     def Newton_Raphson(self,maxiter=250,tol=1e-7,alpha=0.5,beta=0.5,print_every=-1,verbose=False):
         """
         Function that employs pure Newton Raphson iteration with back-tracking line search, following https://www.stat.cmu.edu/~ryantibs/convexopt-S15/lectures/14-newton.pdf at slide #11 
+        stopping_criteria: given in https://web.stanford.edu/class/ee364a/lectures/unconstrained.pdf slide 10-17
         
         Args:
             maxsearch(float): The maximum number performed over for the bisection line search 
@@ -215,8 +216,7 @@ class Uwham:
             v = -np.linalg.lstsq(H,g,rcond=-1)[0]
             
             # Find the local gradient on alpha del f(x + t*v) <= f(x) + alpha*t*del f(x).v, we call del f(x).v -> m 
-            t = 1
-
+            t = 1 
             m = g.dot(v)
             criteria = (v.T).dot(H).dot(v)
 
@@ -247,6 +247,7 @@ class Uwham:
  
             error = np.max(abs(fi - fi_prev)[:-1])/np.max(abs(fi_prev)[:-1])
             iter_ += 1
+            print(iter_)
             
             if iter_ % print_every == 0:
                 print("At iteration {}, the error is {}".format(iter_,criteria)) 
@@ -296,8 +297,46 @@ class Uwham:
         else:
             print("Optimization has not converged")
             return None
+    
+    def compute_betaF_unbiased(self,min_,max_,bins=100):
+        """
+        Function that calculates the Free energy for Uwham from the observations xji and log of the weights lnwji for unbiased simulation
+        
+        Args:
+            min(float): the minimum of the binned vector (float/int)
+            max(float): the maximum of the binned vector (float/int)
+            bins(int): number of bins 
 
-    def compute_betaF_profile(self,min_,max_,bins=100):
+        Returns:
+            1. bins_vec = binned vector from min to max (bins-1,)
+            2. F = The free energy in the binned vectors from min to max for all the simulations performed(S,bins-1)
+            3. logp = log of the probability in each bin
+        """
+        xji = self.xji.squeeze(-1)
+        lnwji = self.lnwji
+
+        if self.lnwji is None:
+            raise RuntimeError("Please run Maximum_likelihood or self_consistent first to obtain weights lnwji")
+
+        bins_vec = np.linspace(min_,max_,bins)
+
+        # the bin size dl 
+        dl = bins_vec[1] - bins_vec[0]
+        
+        # log(sum(exp(lnpji)))
+        lnsum_ = logsumexp(lnwji)
+
+        # This will be a vector such as np.array([1,2,3,2,..]) indicating which bin each element falls into
+        digitized = np.digitize(xji,bins_vec)
+        indices = [np.argwhere(digitized == j) for j in range(1,bins)]
+        logpi = np.array([logsumexp(lnwji[idx]) for idx in indices]) - lnsum_ 
+
+        Fi = np.log(dl)-logpi
+        Fi = Fi - Fi.min()
+        
+        return bins_vec,Fi,logpi
+
+    def compute_betaF_sim(self,min_,max_,bins=100):
         """
         Function that calculates the Free energy for Uwham from the observations xji and log of the weights lnwji
         
@@ -313,6 +352,7 @@ class Uwham:
         """
         xji = self.xji.squeeze(-1)
         buji = self.buji
+
         if self.lnwji is None:
             raise RuntimeError("Please run Maximum_likelihood or self_consistent first to obtain weights lnwji")
 
