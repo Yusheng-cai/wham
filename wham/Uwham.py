@@ -32,7 +32,7 @@ class Uwham:
         Ntot = xji.shape[0] 
 
         # Length of Ntwiddle has to be 1 less than Ni
-        assert len(Ntwiddle) == len(Ni)
+        assert len(Ntwiddle) == len(Ni), "Length of Ntwiddle must be equal to length of Ni"
 
         # The sum of Ni has to be Ntot, this is used for extra security
         assert Ntot == Ni.sum()
@@ -247,10 +247,10 @@ class Uwham:
  
             error = np.max(abs(fi - fi_prev)[:-1])/np.max(abs(fi_prev)[:-1])
             iter_ += 1
-            print(iter_)
+            
             
             if iter_ % print_every == 0:
-                print("At iteration {}, the error is {}".format(iter_,criteria)) 
+                print("At iteration {}, the error is {}".format(iter_, criteria)) 
             fi_prev = fi
 
         self.fi = fi
