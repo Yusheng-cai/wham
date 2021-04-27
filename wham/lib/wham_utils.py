@@ -23,6 +23,27 @@ def read_dat(file_path):
 
     return (N,Ntilde,lines)
 
+def read_dat_gen(file_path):
+    """
+    Function that reads the .dat from INDUS simulations
+
+    Args:
+        file_path(str): the path to the file 
+
+    Return:
+        an numpy array that contains the N and Ntilde from the INDUS simulation (N, Ntilde) -> where both are of shape (nobs,)
+    """
+    f = open(file_path)
+    lines = f.readlines()
+    lines = [line for line in lines if line[0]!="#"]
+
+    lines = [[float(num) for num in line.rstrip("\n").split()] for line in lines if line[0]!="#"]
+    lines = np.array(lines)
+
+    return lines
+
+
+
 def make_bins(data,min,max,bins=101):
     """
     A function that bins some data within min and max
