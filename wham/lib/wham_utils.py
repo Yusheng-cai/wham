@@ -137,4 +137,55 @@ def ss_umbrella(qstar,qavg,qvar,kappa):
     F = FvkN - UkN + FkN
     F = F - F.min()
     return (FvkN,FkN,UkN),F
-        
+
+def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list,dimension:int, xstar:list, temperature=295, method="LBFGS", filename="input.dat"):
+    """
+    A function that writes the input file for Wham calculations
+
+    Args:
+        file(list) : list of string of input file names 
+        colnums(list) : The column numbers for each of the simulations output
+        skipfrombeginning(int) : How much to skip from beginning of data
+        kappa(list) : list of kappa 
+    """
+    # write timeseries
+    f = open(filename, "w")
+    for fi in file:
+        f.write("timeseries = {\n")
+        f.write("\tpath = {}\n".format(fi))
+        f.write("\tcolumns = [ ")
+        for col in colnums:
+            f.write("{} ".format(col))
+        f.write("]\n")
+        f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning))
+        f.write("}\n")
+        f.write("\n")
+
+    assert len(kappa) == dimension, "The dimension of kappa does not match with dimension" 
+
+    # write bias
+    for x in xstar:
+        f.write("bias = {\n")
+        f.write("\tdimension = {}\n".format(dimension))
+        f.write("\txstar = [ ")
+        for xmore in x:
+            f.write("{} ".format(xmore))
+        f.write("]\n")
+        f.write("\tkappa = [ ")
+        for k in kappa:
+            f.write("{} ".format(k))
+        f.write("]\n")
+        f.write("\ttemperature = {}\n".format(temperature))
+        f.write("}\n")
+        f.write("\n")
+    
+    f.write("wham = {\n")
+    f.write("\ttype = Uwham\n")
+    f.write("\tstrategy = {}\n".format(method))
+    f.write("\tbins = {\n")
+    f.write("\t\tdimension = \n")
+    f.write("\t\trange = [ ] \n")
+    f.write("\t\tnumbins = \n")
+    f.write("\t}\n")
+    f.write("\tpjiOutput = \n")
+    f.write("}\n")
