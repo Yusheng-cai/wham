@@ -138,7 +138,8 @@ def ss_umbrella(qstar,qavg,qvar,kappa):
     F = F - F.min()
     return (FvkN,FkN,UkN),F
 
-def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list,dimension:int, xstar:list, temperature=295, method="LBFGS", filename="input.dat"):
+def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list,dimension:int, xstar:list, reweightPhi=[],\
+     temperature=295, method="LBFGS", filename="input.dat"):
     """
     A function that writes the input file for Wham calculations
 
@@ -148,6 +149,9 @@ def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list
         skipfrombeginning(int) : How much to skip from beginning of data
         kappa(list) : list of kappa 
     """
+    # find out the dimensions of the input data
+    dimension = len(colnums)
+
     # write timeseries
     f = open(filename, "w")
     for fi in file:
@@ -187,5 +191,20 @@ def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list
     f.write("\t\trange = [ ] \n")
     f.write("\t\tnumbins = \n")
     f.write("\t}\n")
-    f.write("\tpjiOutput = \n")
+    f.write("\toutputs = [ pji histogram ]\n")
+    f.write("\toutputFile = [ p.out h.out ]\n")
     f.write("}\n")
+    f.write("\n")
+
+    f.write("Reweight = {\n")
+    if len(reweightPhi) != 0:
+        for phi in reweightPhi:
+            f.write("\tbias = {\n")
+            f.write("\t\tdimension = {}\n".format(dimension))
+            f.write("\t\tphi = [ {} ]\n".format(phi))
+            f.write("\t}\n")
+        
+        f.write("\toutputs = [ lnpji FE averages ]\n")
+        f.write("\toutputNames = [ lpji.out fe.out a.out ]\n")
+        f.write("}\n")
+    f.close()
