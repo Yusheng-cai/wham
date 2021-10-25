@@ -138,7 +138,7 @@ def ss_umbrella(qstar,qavg,qvar,kappa):
     F = F - F.min()
     return (FvkN,FkN,UkN),F
 
-def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list,dimension:int, xstar:list, reweightPhi=[],\
+def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:int, kappa:list, xstar:list, reweightPhi=[],\
      temperature=295, method="LBFGS", filename="input.dat"):
     """
     A function that writes the input file for Wham calculations
@@ -146,6 +146,7 @@ def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list
     Args:
         file(list) : list of string of input file names 
         colnums(list) : The column numbers for each of the simulations output
+        skip(int) : How many number to skip for each timeseries
         skipfrombeginning(int) : How much to skip from beginning of data
         kappa(list) : list of kappa 
     """
@@ -161,6 +162,7 @@ def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list
         for col in colnums:
             f.write("{} ".format(col))
         f.write("]\n")
+        f.write("\tskip = {}\n".format(skip))
         f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning))
         f.write("}\n")
         f.write("\n")
@@ -186,18 +188,20 @@ def generateWhamInput(file:list, colnums:list, skipfrombeginning:int, kappa:list
     f.write("wham = {\n")
     f.write("\ttype = Uwham\n")
     f.write("\tstrategy = {}\n".format(method))
-    f.write("\tbins = {\n")
-    f.write("\t\tdimension = \n")
-    f.write("\t\trange = [ ] \n")
-    f.write("\t\tnumbins = \n")
-    f.write("\t}\n")
+
+    for i in range(dimension):
+        f.write("\tbins = {\n")
+        f.write("\t\tdimension = {}\n".format(i+1))
+        f.write("\t\trange = [ ] \n")
+        f.write("\t\tnumbins = \n")
+        f.write("\t}\n")
     f.write("\toutputs = [ pji histogram ]\n")
     f.write("\toutputFile = [ p.out h.out ]\n")
     f.write("}\n")
     f.write("\n")
 
-    f.write("Reweight = {\n")
     if len(reweightPhi) != 0:
+        f.write("Reweight = {\n")
         for phi in reweightPhi:
             f.write("\tbias = {\n")
             f.write("\t\tdimension = {}\n".format(dimension))
