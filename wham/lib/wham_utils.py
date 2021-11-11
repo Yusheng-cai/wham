@@ -138,7 +138,7 @@ def ss_umbrella(qstar,qavg,qvar,kappa):
     F = F - F.min()
     return (FvkN,FkN,UkN),F
 
-def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:int, kappa:list, xstar:list, reweightPhi=[],\
+def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list, kappa:list, xstar:list, reweightPhi=[],\
      temperature=295, method="LBFGS", filename="input.dat"):
     """
     A function that writes the input file for Wham calculations
@@ -147,7 +147,7 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:int, 
         file(list) : list of string of input file names 
         colnums(list) : The column numbers for each of the simulations output
         skip(int) : How many number to skip for each timeseries
-        skipfrombeginning(int) : How much to skip from beginning of data
+        skipfrombeginning(list) : How much to skip from beginning of data
         kappa(list) : list of kappa 
     """
     # find out the dimensions of the input data
@@ -155,7 +155,7 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:int, 
 
     # write timeseries
     f = open(filename, "w")
-    for fi in file:
+    for (i,fi) in enumerate(file):
         f.write("timeseries = {\n")
         f.write("\tpath = {}\n".format(fi))
         f.write("\tcolumns = [ ")
@@ -163,7 +163,10 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:int, 
             f.write("{} ".format(col))
         f.write("]\n")
         f.write("\tskip = {}\n".format(skip))
-        f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning))
+        if len(skipfrombeginning) == 1:
+            f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning[0]))
+        else:
+            f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning[i]))
         f.write("}\n")
         f.write("\n")
 
