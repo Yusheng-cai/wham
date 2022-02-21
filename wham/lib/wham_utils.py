@@ -138,17 +138,52 @@ def ss_umbrella(qstar,qavg,qvar,kappa):
     F = F - F.min()
     return (FvkN,FkN,UkN),F
 
+def generateCombineDataInput(file:list, colnums:list, skip:int, skipfrombeginning:list, filename='Combine.dat'):
+    """
+    Generate the combined data input
+    """
+    # find out the dimensions of the input data
+    dimension = len(colnums)
+
+    # write timeseries
+    f = open(filename, "w")
+    for (i,fi) in enumerate(file):
+        f.write("timeseries = {\n")
+        f.write("\tpath = {}\n".format(fi))
+        f.write("\tcolumns = [ ")
+        for col in colnums:
+            f.write("{} ".format(col))
+        f.write("]\n")
+        f.write("\tskip = {}\n".format(skip))
+        if len(skipfrombeginning) == 1:
+            f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning[0]))
+        else:
+            f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning[i]))
+        f.write("}\n")
+        f.write("\n")
+    f.write("\n")
+    f.write("tsoperation = {\n")
+    f.write("\ttype = Combinedata \n")
+    f.write("\toutputs = [ totaldata ]\n")
+    f.write("\toutputNames = [ ]\n")
+    
+    f.close()
+
+
+
+
 def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list, kappa:list, xstar:list, reweightPhi=[],\
-     temperature=295, method="LBFGS", filename="input.dat"):
+     temperature=295, method="LBFGS", filename="input.dat" , Nvec=[]):
     """
     A function that writes the input file for Wham calculations
 
     Args:
         file(list) : list of string of input file names 
-        colnums(list) : The column numbers for each of the simulations output
+        colnums(list) : The column numbers for each of the simulations output, assumes the same for all time series 
         skip(int) : How many number to skip for each timeseries
         skipfrombeginning(list) : How much to skip from beginning of data
         kappa(list) : list of kappa 
+        xstart(list(list)) : Does not assume the same for every simulation, usually an (N,d) list 
     """
     # find out the dimensions of the input data
     dimension = len(colnums)
@@ -198,6 +233,12 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
         f.write("\t\trange = [ ] \n")
         f.write("\t\tnumbins = \n")
         f.write("\t}\n")
+
+    if len(Nvec) > 0: 
+        f.write("\tNvec = [ ")
+        for n in Nvec:
+            f.write("{} ".format(n))
+        f.write("]\n")
     f.write("\toutputs = [ pji histogram ]\n")
     f.write("\toutputFile = [ p.out h.out ]\n")
     f.write("}\n")
@@ -208,7 +249,10 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
         for phi in reweightPhi:
             f.write("\tbias = {\n")
             f.write("\t\tdimension = {}\n".format(dimension))
-            f.write("\t\tphi = [ {} ]\n".format(phi))
+            f.write("\t\tphi = [ ") 
+            for p in phi:
+                f.write("{} ".format(p))
+            f.write(" ]\n")
             f.write("\t}\n")
         
         f.write("\toutputs = [ lnpji FE averages ]\n")
