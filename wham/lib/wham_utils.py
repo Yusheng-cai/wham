@@ -163,9 +163,10 @@ def generateCombineDataInput(file:list, colnums:list, skip:int, skipfrombeginnin
         f.write("\n")
     f.write("\n")
     f.write("tsoperation = {\n")
-    f.write("\ttype = Combinedata \n")
+    f.write("\ttype = combine_data \n")
     f.write("\toutputs = [ totaldata ]\n")
     f.write("\toutputNames = [ ]\n")
+    f.write("}\n")
     
     f.close()
 
