@@ -170,7 +170,42 @@ def generateCombineDataInput(file:list, colnums:list, skip:int, skipfrombeginnin
     
     f.close()
 
+def generateHistogramInput(file:list, colnums:list, skip:int, skipfrombeginning:list, filename='Combine.dat'):
+    """
+    Generate the combined data input
+    """
+    # find out the dimensions of the input data
+    dimension = len(colnums)
 
+    # write timeseries
+    f = open(filename, "w")
+    for (i,fi) in enumerate(file):
+        f.write("timeseries = {\n")
+        f.write("\tpath = {}\n".format(fi))
+        f.write("\tcolumns = [ ")
+        for col in colnums:
+            f.write("{} ".format(col))
+        f.write("]\n")
+        f.write("\tskip = {}\n".format(skip))
+        if len(skipfrombeginning) == 1:
+            f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning[0]))
+        else:
+            f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning[i]))
+        f.write("}\n")
+        f.write("\n")
+    f.write("\n")
+    f.write("tsoperation = {\n")
+    f.write("\ttype = histogram \n")
+    f.write("\toutputs = [ histogram totaldata ]\n")
+    f.write("\tbins = {\n")
+    f.write("\t\trange = [ ]\n")
+    f.write("\t\tnumbins = \n")
+    f.write("\t\tdimension = 1\n")
+    f.write("\t}\n")
+    f.write("\toutputNames = [ ]\n")
+    f.write("}\n")
+    
+    f.close()
 
 
 def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list, kappa:list, xstar:list, reweightPhi=[],\
@@ -183,7 +218,7 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
         colnums(list) : The column numbers for each of the simulations output, assumes the same for all time series 
         skip(int) : How many number to skip for each timeseries
         skipfrombeginning(list) : How much to skip from beginning of data
-        kappa(list) : list of kappa 
+        kappa(list(list)) : list of list of kappa 
         xstart(list(list)) : Does not assume the same for every simulation, usually an (N,d) list 
     """
     # find out the dimensions of the input data
@@ -206,10 +241,8 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
         f.write("}\n")
         f.write("\n")
 
-    assert len(kappa) == dimension, "The dimension of kappa does not match with dimension" 
-
     # write bias
-    for x in xstar:
+    for (i,x) in enumerate(xstar):
         f.write("bias = {\n")
         f.write("\tdimension = {}\n".format(dimension))
         f.write("\txstar = [ ")
@@ -217,8 +250,12 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
             f.write("{} ".format(xmore))
         f.write("]\n")
         f.write("\tkappa = [ ")
-        for k in kappa:
-            f.write("{} ".format(k))
+        if len(kappa) > 1:
+            for k in kappa[i]:
+                f.write("{} ".format(k))
+        else:
+            for k in kappa[0]:
+                f.write("{} ".format(k))
         f.write("]\n")
         f.write("\ttemperature = {}\n".format(temperature))
         f.write("}\n")
