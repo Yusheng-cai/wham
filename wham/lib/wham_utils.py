@@ -197,11 +197,13 @@ def generateHistogramInput(file:list, colnums:list, skip:int, skipfrombeginning:
     f.write("tsoperation = {\n")
     f.write("\ttype = histogram \n")
     f.write("\toutputs = [ histogram totaldata ]\n")
-    f.write("\tbins = {\n")
-    f.write("\t\trange = [ ]\n")
-    f.write("\t\tnumbins = \n")
-    f.write("\t\tdimension = 1\n")
-    f.write("\t}\n")
+
+    for i in range(dimension):
+        f.write("\tbins = {\n")
+        f.write("\t\tdimension = {}\n".format(i+1))
+        f.write("\t\trange = [ ]\n")
+        f.write("\t\tnumbins = \n")
+        f.write("\t}\n")
     f.write("\toutputNames = [ ]\n")
     f.write("}\n")
     
@@ -263,7 +265,20 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
     
     f.write("wham = {\n")
     f.write("\ttype = Uwham\n")
-    f.write("\tstrategy = {}\n".format(method))
+    f.write("\tUwhamstrategy = {\n")
+    f.write("\t\ttype = LBFGS\n")
+    f.write("\t\tname = l\n")
+    f.write("\t\tmax_iterations = 100\n")
+    f.write("\t\tprintevery = 1\n")
+    f.write("\t}\n")
+
+    f.write("\tUwhamstrategy = {\n")
+    f.write("\t\ttype = adaptive\n")
+    f.write("\t\tname = a\n")
+    f.write("\t\tprintevery = 1\n")
+    f.write("\t}\n")
+
+    f.write("\tstrategyNames = [ l a ]\n")
 
     for i in range(dimension):
         f.write("\tbins = {\n")
@@ -277,8 +292,8 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
         for n in Nvec:
             f.write("{} ".format(n))
         f.write("]\n")
-    f.write("\toutputs = [ pji histogram ]\n")
-    f.write("\toutputFile = [ p.out h.out ]\n")
+    f.write("\toutputs = [ pji histogram Averages forces ]\n")
+    f.write("\toutputFile = [ p.out h.out avg.out f.out ]\n")
     f.write("}\n")
     f.write("\n")
 
