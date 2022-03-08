@@ -130,7 +130,7 @@ def ss_umbrella(qstar,qavg,qvar,kappa):
     integrand=kappa*(qstar - qavg)
     FkN = np.zeros((len(integrand),))
     for i in range(2,len(integrand)+1):
-        FkN[i-1] = integrate.simps(integrand[:i],qstar[:i])
+        FkN[i-1] = integrate.trapz(integrand[:i],qstar[:i])
 
     UkN = kappa/2*(qstar-qavg)**2
 
