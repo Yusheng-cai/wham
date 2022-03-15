@@ -1,6 +1,16 @@
 import numpy as np
 from scipy import integrate
 
+def integrateDim(FE:np.ndarray, axis=1):
+    """
+    This function integrates out one of the dimensions present in 2d FE 
+    The 2d Free Energy will have -ln(pi) where there is data and np.nan otherwise
+    """
+    Dim = FE.shape[axis]
+
+    for i in range(Dim):
+        pass
+
 def read_dat(file_path):
     """
     Function that reads the .dat from INDUS simulations
@@ -143,7 +153,7 @@ def generateCombineDataInput(file:list, colnums:list, skip:int, skipfrombeginnin
     Generate the combined data input
     """
     # find out the dimensions of the input data
-    dimension = len(colnums)
+    dimension = len(colnums[0])
 
     # write timeseries
     f = open(filename, "w")
@@ -151,7 +161,7 @@ def generateCombineDataInput(file:list, colnums:list, skip:int, skipfrombeginnin
         f.write("timeseries = {\n")
         f.write("\tpath = {}\n".format(fi))
         f.write("\tcolumns = [ ")
-        for col in colnums:
+        for col in colnums[i]:
             f.write("{} ".format(col))
         f.write("]\n")
         f.write("\tskip = {}\n".format(skip))
@@ -224,7 +234,7 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
         xstart(list(list)) : Does not assume the same for every simulation, usually an (N,d) list 
     """
     # find out the dimensions of the input data
-    dimension = len(colnums)
+    dimension = len(colnums[0])
 
     # write timeseries
     f = open(filename, "w")
@@ -232,7 +242,7 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
         f.write("timeseries = {\n")
         f.write("\tpath = {}\n".format(fi))
         f.write("\tcolumns = [ ")
-        for col in colnums:
+        for col in colnums[i]:
             f.write("{} ".format(col))
         f.write("]\n")
         f.write("\tskip = {}\n".format(skip))
