@@ -185,7 +185,7 @@ def generateHistogramInput(file:list, colnums:list, skip:int, skipfrombeginning:
     Generate the combined data input
     """
     # find out the dimensions of the input data
-    dimension = len(colnums)
+    dimension = len(colnums[0])
 
     # write timeseries
     f = open(filename, "w")
@@ -193,10 +193,10 @@ def generateHistogramInput(file:list, colnums:list, skip:int, skipfrombeginning:
         f.write("timeseries = {\n")
         f.write("\tpath = {}\n".format(fi))
         f.write("\tcolumns = [ ")
-        for col in colnums:
+        for col in colnums[i]:
             f.write("{} ".format(col))
         f.write("]\n")
-        f.write("\tskip = {}\n".format(skip))
+        f.write("\tskip = {}\n".format(skip[i]))
         if len(skipfrombeginning) == 1:
             f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning[0]))
         else:
@@ -219,8 +219,91 @@ def generateHistogramInput(file:list, colnums:list, skip:int, skipfrombeginning:
     
     f.close()
 
+def generateWhamInputCombined(file:str, kappa:list, xstar:list, Nvec=[], temperature=320,filename="input.dat"):
+    """
+    Performing Input for combined wham input
 
-def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list, kappa:list, xstar:list, reweightPhi=[],\
+    Args:
+    -----
+        file(str)   : One file that corresponds to the combined input data
+        kappa(list) : The list of kappas (list[list])
+        xstar(list) : The list of xstars (list[list])
+        Nvec(list)  : Optional argument that inputs the number of data per simulation
+        temperature(float)  : The temperature at which the calculations are performed at 
+    """
+    # find out the dimensions of the input data
+    dimension = len(xstar[0])
+
+    # write timeseries
+    f = open(filename, "w")
+    f.write("timeseries = {\n")
+    f.write("\tpath = {}\n".format(file))
+    f.write("\tcolumns = [ ")
+    for i in range(dimension):
+        f.write("{} ".format(i+1))
+    f.write("]\n")
+    f.write("\tskip = 0\n")
+    f.write("\tskipfrombeginning = 0\n")
+    f.write("}\n")
+    f.write("\n")
+
+    # write bias
+    for (i,x) in enumerate(xstar):
+        f.write("bias = {\n")
+        f.write("\tdimension = {}\n".format(dimension))
+        f.write("\txstar = [ ")
+        for xmore in x:
+            f.write("{} ".format(xmore))
+        f.write("]\n")
+        f.write("\tkappa = [ ")
+        if len(kappa) > 1:
+            for k in kappa[i]:
+                f.write("{} ".format(k))
+        else:
+            for k in kappa[0]:
+                f.write("{} ".format(k))
+        f.write("]\n")
+        f.write("\ttemperature = {}\n".format(temperature))
+        f.write("}\n")
+        f.write("\n")
+    
+    f.write("wham = {\n")
+    f.write("\ttype = Uwham\n")
+    f.write("\tUwhamstrategy = {\n")
+    f.write("\t\ttype = LBFGS\n")
+    f.write("\t\tname = l\n")
+    f.write("\t\tmax_iterations = 100\n")
+    f.write("\t\tprintevery = 1\n")
+    f.write("\t}\n")
+
+    f.write("\tUwhamstrategy = {\n")
+    f.write("\t\ttype = adaptive\n")
+    f.write("\t\tname = a\n")
+    f.write("\t\tprintevery = 1\n")
+    f.write("\t}\n")
+    f.write("\tstrategyNames = [ l a ]\n")
+
+    for i in range(dimension):
+        f.write("\tbins = {\n")
+        f.write("\t\tdimension = {}\n".format(i+1))
+        f.write("\t\trange = [ ] \n")
+        f.write("\t\tnumbins = \n")
+        f.write("\t}\n")
+
+    if len(Nvec) > 0: 
+        f.write("\tNvec = [ ")
+        for n in Nvec:
+            f.write("{} ".format(n))
+        f.write("]\n")
+    else:
+        f.write("\tN = \n")
+
+    f.write("\toutputs = [ pji histogram Averages ]\n")
+    f.write("\toutputFile = [ p.out h.out avg.out ]\n")
+    f.write("}\n")
+    f.write("\n")
+
+def generateWhamInput(file:list, colnums:list, skip:list, skipfrombeginning:list, kappa:list, xstar:list, reweightPhi=[],\
      temperature=295, method="LBFGS", filename="input.dat" , Nvec=[]):
     """
     A function that writes the input file for Wham calculations
@@ -245,7 +328,7 @@ def generateWhamInput(file:list, colnums:list, skip:int, skipfrombeginning:list,
         for col in colnums[i]:
             f.write("{} ".format(col))
         f.write("]\n")
-        f.write("\tskip = {}\n".format(skip))
+        f.write("\tskip = {}\n".format(skip[i]))
         if len(skipfrombeginning) == 1:
             f.write("\tskipfrombeginning = {}\n".format(skipfrombeginning[0]))
         else:
