@@ -1,38 +1,6 @@
 import numpy as np
 from scipy import integrate
 
-def integrateDim(FE:np.ndarray, axis=1):
-    """
-    This function integrates out one of the dimensions present in 2d FE 
-    The 2d Free Energy will have -ln(pi) where there is data and np.nan otherwise
-    """
-    Dim = FE.shape[axis]
-
-    for i in range(Dim):
-        pass
-
-def read_dat(file_path):
-    """
-    Function that reads the .dat from INDUS simulations
-
-    Args:
-        file_path(str): the path to the file 
-
-    Return:
-        an numpy array that contains the N and Ntilde from the INDUS simulation (N, Ntilde) -> where both are of shape (nobs,)
-    """
-    f = open(file_path)
-    lines = f.readlines()
-    lines = [line for line in lines if line[0]!="#"]
-
-    lines = [[float(num) for num in line.rstrip("\n").split()] for line in lines if line[0]!="#"]
-    lines = np.array(lines)
-
-    N = lines[:,1]
-    Ntilde = lines[:,2]
-
-    return (N,Ntilde,lines)
-
 def read_dat_gen(file_path):
     """
     Function that reads the .dat from INDUS simulations
@@ -51,8 +19,6 @@ def read_dat_gen(file_path):
     lines = np.array(lines)
 
     return lines
-
-
 
 def make_bins(data,min,max,bins=101):
     """
@@ -219,7 +185,7 @@ def generateHistogramInput(file:list, colnums:list, skip:int, skipfrombeginning:
     
     f.close()
 
-def generateWhamInputCombined(file:str, kappa:list, xstar:list, Nvec=[], temperature=320,filename="input.dat"):
+def generateWhamInputCombined(file:str, kappa:list, xstar:list, Nvec=[], temperature=320, filename="input.dat", reweightPhi=[]):
     """
     Performing Input for combined wham input
 
@@ -268,6 +234,7 @@ def generateWhamInputCombined(file:str, kappa:list, xstar:list, Nvec=[], tempera
         f.write("\n")
     
     f.write("wham = {\n")
+    f.write("\tname = w\n")
     f.write("\ttype = Uwham\n")
     f.write("\tUwhamstrategy = {\n")
     f.write("\t\ttype = LBFGS\n")
@@ -303,8 +270,29 @@ def generateWhamInputCombined(file:str, kappa:list, xstar:list, Nvec=[], tempera
     f.write("}\n")
     f.write("\n")
 
+    if len(reweightPhi) != 0:
+        f.write("Reweight = {\n")
+        for phi in reweightPhi:
+            f.write("\tbias = {\n")
+            f.write("\t\tdimension = {}\n".format(dimension))
+            f.write("\t\tphi = [ ") 
+            assert len(phi) == dimension , "Same dimension in phi please!"
+            for p in phi:
+                f.write("{} ".format(p))
+            f.write(" ]\n")
+            f.write("\t}\n")
+        
+        f.write("\toutputs = [ ReweightAverages ]\n")
+        f.write("\toutputNames = [ ReweightAvg.out ]\n")
+        f.write("\twham = w\n")
+        f.write("\ttype = \n")
+        f.write("}\n")
+    f.close()
+
+
+
 def generateWhamInput(file:list, colnums:list, skip:list, skipfrombeginning:list, kappa:list, xstar:list, reweightPhi=[],\
-     temperature=295, method="LBFGS", filename="input.dat" , Nvec=[]):
+     temperature=295, filename="input.dat" , Nvec=[]):
     """
     A function that writes the input file for Wham calculations
 
@@ -357,6 +345,7 @@ def generateWhamInput(file:list, colnums:list, skip:list, skipfrombeginning:list
         f.write("\n")
     
     f.write("wham = {\n")
+    f.write("\tname = w\n")
     f.write("\ttype = Uwham\n")
     f.write("\tUwhamstrategy = {\n")
     f.write("\t\ttype = LBFGS\n")
@@ -401,7 +390,9 @@ def generateWhamInput(file:list, colnums:list, skip:list, skipfrombeginning:list
             f.write(" ]\n")
             f.write("\t}\n")
         
-        f.write("\toutputs = [ lnpji FE averages ]\n")
-        f.write("\toutputNames = [ lpji.out fe.out a.out ]\n")
+        f.write("\toutputs = [ ReweightAverages ]\n")
+        f.write("\toutputNames = [ ReweightAvg.out ]\n")
+        f.write("\twham = w\n")
+        f.write("\ttype = \n")
         f.write("}\n")
     f.close()
