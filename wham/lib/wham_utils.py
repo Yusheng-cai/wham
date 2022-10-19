@@ -291,7 +291,7 @@ def generateWhamInputCombined(file:str, kappa:list, xstar:list, Nvec=[], tempera
 
 
 
-def generateWhamInput(file:list, colnums:list, skip:list, skipfrombeginning:list, kappa:list, xstar:list, reweightPhi=[],\
+def generateWhamInput(file:list, colnums:list, skip:list, skipfrombeginning:list, xstar=None, kappa=None, phi=None, reweightPhi=[],\
      temperature=295, filename="input.dat" , Nvec=[]):
     """
     A function that writes the input file for Wham calculations
@@ -325,20 +325,30 @@ def generateWhamInput(file:list, colnums:list, skip:list, skipfrombeginning:list
         f.write("\n")
 
     # write bias
-    for (i,x) in enumerate(xstar):
+    for i in range(len(file)):
         f.write("bias = {\n")
         f.write("\tdimension = {}\n".format(dimension))
-        f.write("\txstar = [ ")
-        for xmore in x:
-            f.write("{} ".format(xmore))
-        f.write("]\n")
-        f.write("\tkappa = [ ")
-        if len(kappa) > 1:
-            for k in kappa[i]:
-                f.write("{} ".format(k))
-        else:
-            for k in kappa[0]:
-                f.write("{} ".format(k))
+        
+        # write kappa * 0.5 * (x - xstar)**2 potential
+        if xstar is not None:
+            f.write("\txstar = [ ")
+            for xmore in xstar[i]:
+                f.write("{} ".format(xmore))
+            f.write("]\n")
+        if kappa is not None:
+            f.write("\tkappa = [ ")
+            if len(kappa) > 1:
+                for k in kappa[i]:
+                    f.write("{} ".format(k))
+            else:
+                for k in kappa[0]:
+                    f.write("{} ".format(k))
+        
+        # write phi * x potential
+        if phi is not None:
+            f.write("\tphi = [ ")
+            for p in phi[i]:
+                f.write("{} ".format(p))
         f.write("]\n")
         f.write("\ttemperature = {}\n".format(temperature))
         f.write("}\n")
